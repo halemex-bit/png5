@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Penang 2026 ABGR Booking</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/bEd62zX.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            /* TEMA HIJAU PREMIUM */
+            --bg-color: #ecfdf5; /* Emerald 50 */
+            --text-main: #064e3b; /* Emerald 900 */
+            --text-primary: #047857; /* Emerald 700 */
+            --text-accent: #10b981; /* Emerald 500 */
+            --shadow-light: #ffffff; 
+            --shadow-dark: #a7f3d0; /* Emerald 200 shadow */
+            
+            /* PRICES - Colors match Legend */
+            --col-retail-inter: #94a3b8; /* Slate (Now RM4000) */
+            --col-retail-corner: #fbbf24; /* Yellow (Now RM4500) */
+            --col-fnb-out-inter: #c084fc; /* Purple (Now RM2500) */
+            --col-fnb-out-corner: #22d3ee; /* Cyan (Now RM3000) */
+
+            /* STATUS - SOLD JADI PINK */
+            --col-sold-fill: #f472b6; /* Pink 400 */
+            --col-sold-stroke: #db2777; /* Pink 600 */
+        }
+
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden;
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23047857' stroke='white' stroke-width='2'%3E%3Cpath d='M2 2l7.5 19.5 3.5-8.5 8.5-3.5z'/%3E%3C/svg%3E"), auto !important;
+        }
+        button, .booth, a, input, select, textarea { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23059669' stroke='white' stroke-width='2'%3E%3Cpath d='M10 2l-1.5 6h-5.5l4.5 4-2 6 5.5-3.5 5.5 3.5-2-6 4.5-4h-5.5z'/%3E%3C/svg%3E"), pointer !important;
+        }
+
+        .neu-panel { background: var(--bg-color); border-radius: 20px; box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light); border: 1px solid rgba(255,255,255,0.4); }
+        .neu-pressed { background: var(--bg-color); box-shadow: inset 6px 6px 10px var(--shadow-dark), inset -6px -6px 10px var(--shadow-light); border-radius: 15px; }
+        
+        /* Butang Hijau */
+        .neu-btn { background: var(--bg-color); border: none; border-radius: 12px; color: var(--text-primary); box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); transition: all 0.2s ease; }
+        .neu-btn:hover { transform: translateY(-2px); }
+        .neu-btn.active { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); color: #065f46; background: #d1fae5; transform: translateY(0); }
+        
+        .neu-btn-primary { background: #059669; color: white; border-radius: 12px; border: none; box-shadow: 6px 6px 12px #6ee7b7, -6px -6px 12px #ffffff; transition: all 0.2s ease; }
+        .neu-btn-primary:hover { transform: translateY(-2px); background: #047857; }
+        
+        .neu-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-color); color: var(--text-primary); box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); }
+        .neu-input { background: var(--bg-color); border: none; border-radius: 8px; box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); padding: 12px; outline: none; width: 100%; color: #064e3b; }
+        .neu-modal-overlay { background: rgba(6, 78, 59, 0.4); backdrop-filter: blur(8px); }
+        .logo-container { background: linear-gradient(145deg, #059669, #047857); border-radius: 50%; padding: 8px; box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); display: flex; align-items: center; justify-content: center; }
+
+        /* BOOTH STYLES */
+        .booth { transition: fill 0.3s ease, stroke 0.3s ease, opacity 0.3s ease; cursor: pointer; stroke: #000; stroke-width: 0.5px; fill: #FFFFFF; }
+        .booth rect { fill: inherit; pointer-events: all; }
+        .booth text { font-family: Arial, sans-serif; font-size: 5px; fill: #000; pointer-events: none; text-anchor: middle; dominant-baseline: middle; font-weight: normal; }
+        .booth:hover { stroke: #059669 !important; stroke-width: 2px !important; z-index: 100; }
+        .booth.dimmed { opacity: 0.1 !important; filter: grayscale(100%); pointer-events: none; }
+
+        /* UPDATED Price Color Classes */
+        .booth.price-4000 { fill: var(--col-retail-inter) !important; } /* Retail Inter (Gray) */
+        .booth.price-4500 { fill: var(--col-retail-corner) !important; } /* Retail Corner (Yellow) */
+        .booth.price-2500 { fill: var(--col-fnb-out-inter) !important; } /* Outdoor Inter (Purple) */
+        .booth.price-3000 { fill: var(--col-fnb-out-corner) !important; } /* Outdoor Corner (Cyan) */
+
+        /* SOLD - PINK */
+        .booth.status-sold, .booth.status-booked, .booth.status-fullypaid { fill: var(--col-sold-fill) !important; stroke: var(--col-sold-stroke) !important; stroke-width: 1px !important; stroke-dasharray: 4,2; opacity: 1 !important; cursor: not-allowed; }
+        
+        .booth.selected { fill: #059669 !important; stroke: white !important; stroke-width: 2px !important; filter: drop-shadow(0 0 8px rgba(5, 150, 105, 0.6)); animation: selectedGlow 2s ease-in-out infinite; }
+        .booth.searched { stroke: #059669 !important; stroke-width: 6px !important; animation: searchPulse 0.8s infinite alternate !important; z-index: 200 !important; }
+        
+        @keyframes searchPulse { 0% { fill: #ffffff; stroke-width: 4px; filter: drop-shadow(0 0 5px #059669); } 100% { fill: #a7f3d0; stroke-width: 8px; filter: drop-shadow(0 0 20px #059669); } }
+        @keyframes selectedGlow { 0% { filter: drop-shadow(0 0 5px rgba(5, 150, 105, 0.6)); } 50% { filter: drop-shadow(0 0 15px rgba(5, 150, 105, 0.9)); } 100% { filter: drop-shadow(0 0 5px rgba(5, 150, 105, 0.6)); } }
+
+        .tooltip { position: fixed; z-index: 100; background: rgba(6, 78, 59, 0.95); color: white; padding: 12px; border-radius: 12px; font-size: 12px; pointer-events: none; border: 1px solid #34d399; transform: translate(-50%, -110%); box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: opacity 0.15s ease; }
+        .notification-toast { position: fixed; top: 90px; right: 20px; z-index: 200; background: #ecfdf5; border-radius: 16px; padding: 16px 24px; box-shadow: 8px 8px 16px #a7f3d0, -8px -8px 16px #ffffff; border: 1px solid rgba(255,255,255,0.5); display: flex; align-items: center; gap: 15px; transform: translateX(150%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-width: 350px; }
+        .notification-toast.show { transform: translateX(0); }
+        .footer-bg { background: #059669; color: white; }
+        .social-media-icons { display: flex; flex-direction: row; gap: 12px; }
+        .neu-icon-btn { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-color); box-shadow: 5px 5px 10px #a7f3d0, -5px -5px 10px #ffffff; color: #059669; text-decoration: none; transition: all 0.2s ease; }
+        .lang-btn { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; transition: transform 0.2s; border: 2px solid transparent; }
+        .lang-btn:hover { transform: scale(1.1); }
+        .lang-btn.active { border-color: #059669; box-shadow: 0 0 10px rgba(5, 150, 105, 0.3); }
+        .lang-btn img { width: 100%; height: 100%; object-fit: cover; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+
+<body x-data="boothSystem()" x-init="initSystem()" class="min-h-screen flex flex-col">
+
+    <div :class="notification.visible ? 'show' : ''" class="notification-toast">
+        <div class="neu-circle w-10 h-10 flex-shrink-0 text-emerald-600"><i :class="notification.icon"></i></div>
+        <div><div class="font-bold text-emerald-800 text-sm uppercase tracking-wide" x-text="notification.title"></div><div class="text-xs text-gray-600 font-medium" x-text="notification.message"></div></div>
+    </div>
+
+    <div x-show="modals.welcome" class="fixed inset-0 neu-modal-overlay z-[60] flex items-center justify-center p-4" x-cloak>
+        <div class="neu-panel max-w-lg w-full p-8 relative animate-fade-in-up bg-white max-h-[90vh] overflow-y-auto">
+            <div class="text-center mb-6">
+                <div class="inline-block p-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-xl mb-4 transform hover:scale-105 transition">
+                    <img src="https://i.imgur.com/uikzokX.png" alt="Absolut Bazaar" class="h-12 w-auto brightness-0 invert">
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800" x-text="t('welcomeTitle')"></h2>
+                <p class="text-emerald-600 font-medium text-sm mt-1">Absolut Bazaar Penang @ PICCA 2026</p>
+            </div>
+            <div class="space-y-4 mb-8">
+                <div class="flex items-center gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">1</div><div class="text-sm text-gray-700" x-html="t('step1')"></div></div>
+                <div class="flex items-center gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">2</div><div class="text-sm text-gray-700" x-html="t('step2')"></div></div>
+                <div class="flex items-center gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">3</div><div class="text-sm text-gray-700" x-html="t('step3')"></div></div>
+                <div class="flex items-start gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">4</div><div class="text-sm text-gray-700 pt-2" x-html="t('step4')"></div></div>
+                <div class="flex items-start gap-4" x-data="{ open: false }">
+                    <div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">5</div>
+                    <div class="w-full pt-2">
+                        <button @click="open = !open" class="flex items-center justify-between w-full text-sm font-bold text-gray-800 hover:text-emerald-600 transition"><span x-text="t('schedule')"></span><i :class="open ? 'fa-chevron-up' : 'fa-chevron-down'" class="fas text-xs"></i></button>
+                        <div x-show="open" x-collapse class="mt-2 text-xs text-gray-600 space-y-2 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                            <div><span class="font-bold text-emerald-700">📆 6 March:</span> 12pm - 2am</div>
+                            <div><span class="font-bold text-emerald-700">📆 7 March:</span> 10am - 2am</div>
+                            <div><span class="font-bold text-emerald-700">📆 8 March:</span> 10am - 10pm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button @click="modals.welcome = false" class="w-full py-4 neu-btn-primary font-bold text-lg shadow-lg" x-text="t('understand')"></button>
+        </div>
+    </div>
+
+    <header class="sticky top-0 z-40 py-3 bg-[#ecfdf5] shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <div class="logo-container mr-3"><img src="https://i.imgur.com/uikzokX.png" alt="Logo" class="h-8 w-auto brightness-0 invert"></div>
+                <div>
+                    <h1 class="text-lg font-bold leading-tight text-emerald-800">Absolut Bazaar Penang</h1>
+                    <p class="text-gray-500 text-xs font-semibold">6 - 8 MARCH 2026 @ PICCA</p>
+                    <div class="flex items-center gap-3 mt-0.5">
+                        <a href="#" class="text-emerald-500 text-[10px] font-bold hover:underline hover:text-emerald-700 flex items-center gap-1"><i class="fas fa-map-marker-alt"></i> PICCA, Penang</a>
+                        <button @click="modals.welcome = true" class="text-emerald-500 text-[10px] font-bold hover:underline hover:text-emerald-700 flex items-center gap-1 border-l border-emerald-300 pl-3"><i class="fas fa-question-circle"></i> <span x-text="t('help')"></span></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="flex gap-2">
+                    <button @click="lang = 'ms'" class="lang-btn" :class="lang === 'ms' ? 'active' : 'opacity-50 grayscale hover:grayscale-0'"><img src="https://flagcdn.com/w80/my.png" alt="Bahasa Melayu" title="Bahasa Melayu"></button>
+                    <button @click="lang = 'en'" class="lang-btn" :class="lang === 'en' ? 'active' : 'opacity-50 grayscale hover:grayscale-0'"><img src="https://flagcdn.com/w80/gb.png" alt="English" title="English"></button>
+                </div>
+                <div x-show="selectedBooths.length > 0" x-transition class="neu-pressed px-4 py-2 rounded-full text-xs font-bold flex items-center text-emerald-600"><span x-text="selectedBooths.length + '/2 ' + t('selected')"></span></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="py-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-center items-center gap-4 px-4">
+            <div class="relative w-full max-w-xs order-2 md:order-1">
+                <input type="text" x-model="searchQuery" @keyup.enter="searchBooth" :placeholder="t('searchPlaceholder')" class="neu-input pl-10 uppercase font-bold text-emerald-600">
+                <button @click="searchBooth" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-500"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="flex gap-4 order-1 md:order-2">
+                <button @click="switchZone('indoor')" :class="currentZone === 'indoor' ? 'neu-btn active' : 'neu-btn'" class="px-6 py-3 rounded-xl font-bold text-sm" x-text="t('indoor')"></button>
+                <button @click="switchZone('outdoor')" :class="currentZone === 'outdoor' ? 'neu-btn active' : 'neu-btn'" class="px-6 py-3 rounded-xl font-bold text-sm" x-text="t('outdoor')"></button>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-2">
+        
+        <div class="text-center mb-6">
+            <div class="mt-4 flex justify-center gap-4 text-xs flex-wrap bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                <template x-if="currentZone === 'indoor'">
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-slate-400 mr-1 shadow-sm"></span> Retail Inter (RM4,000)</div>
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-yellow-400 mr-1 shadow-sm"></span> Retail Corner (RM4,500)</div>
+                    </div>
+                </template>
+                <template x-if="currentZone === 'outdoor'">
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-purple-400 mr-1 shadow-sm"></span> F&B Outdoor Inter (RM2,500)</div>
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-cyan-400 mr-1 shadow-sm"></span> F&B Outdoor Corner (RM3,000)</div>
+                    </div>
+                </template>
+                <div class="flex items-center ml-4 border-l border-gray-300 pl-4"><span class="w-3 h-3 rounded-full bg-pink-400 mr-1 shadow-sm border border-pink-500"></span> Sold/Booked</div>
+            </div>
+        </div>
+
+        <div class="neu-panel p-2 relative h-[600px] overflow-hidden mb-8 bg-white">
+            <div x-show="loading" class="absolute top-2 right-2 z-30 bg-white/80 px-3 py-1 rounded-full text-xs font-bold text-emerald-500 shadow flex items-center gap-2"><i class="fas fa-circle-notch fa-spin"></i> <span x-text="t('syncing')"></span></div>
+            <div class="absolute top-4 left-4 z-20 pointer-events-none"><span class="neu-pressed px-3 py-1 text-xs font-bold text-emerald-500 uppercase tracking-wider" x-text="t(currentZone)"></span></div>
+            <div class="absolute top-4 right-4 z-20 flex flex-col gap-3">
+                <button @click="zoomIn()" class="neu-circle"><i class="fas fa-plus"></i></button>
+                <button @click="zoomOut()" class="neu-circle"><i class="fas fa-minus"></i></button>
+                <button @click="resetZoom()" class="neu-circle"><i class="fas fa-compress"></i></button>
+                <button @click="toggleFilter" :class="filterAvailable ? 'bg-green-100 text-green-600 border border-green-300' : ''" class="neu-circle" title="Filter Available"><i class="fas fa-filter"></i></button>
+            </div>
+
+            <div x-ref="floorplanContainer" @mousedown="startDrag" @touchstart="startDrag" class="w-full h-full origin-top-left cursor-move touch-none" style="transform-origin: 0 0;">
+
+                <svg x-show="currentZone === 'indoor'" id="indoor-svg" viewBox="0 0 952.22 535.64" xmlns="http://www.w3.org/2000/svg">
+                    <image href="https://i.imgur.com/ypQT5W4.jpeg" x="0" y="0" width="952.22" height="535.64" opacity="0.6"/>
+                    <rect x="244.65" y="260.37" width="276.66" height="31.42" fill="#24ffff" opacity="0.2" pointer-events="none"/>
+                    
+                    <g id="1" class="booth"><rect x="181.9" y="248.5" width="10.85" height="10.85"/><text x="187.32" y="253.92">1</text></g>
+                     <g id="2" class="booth"><rect x="193.25" y="248.5" width="10.85" height="10.85"/><text x="198.67" y="253.92">2</text></g>
+                    <g id="3" class="booth"><rect x="204.59" y="248.5" width="10.85" height="10.85"/><text x="210.01" y="253.92">3</text></g>
+                    <g id="4" class="booth"><rect x="215.94" y="248.5" width="10.85" height="10.85"/><text x="221.36" y="253.92">4</text></g>
+                    <g id="5" class="booth"><rect x="227.29" y="248.5" width="10.85" height="10.85"/><text x="232.71" y="253.92">5</text></g>
+                    <g id="6" class="booth"><rect x="238.63" y="248.5" width="10.85" height="10.85"/><text x="244.05" y="253.92">6</text></g>
+                    <g id="7" class="booth"><rect x="249.98" y="248.5" width="10.85" height="10.85"/><text x="255.40" y="253.92">7</text></g>
+                    <g id="8" class="booth"><rect x="249.98" y="259.7" width="10.85" height="10.85"/><text x="255.40" y="265.12">8</text></g>
+                    <g id="9" class="booth"><rect x="267.38" y="279.94" width="10.85" height="10.85"/><text x="272.80" y="285.36">9</text></g>
+                    <g id="10" class="booth"><rect x="278.73" y="279.94" width="10.85" height="10.85"/><text x="284.15" y="285.36">10</text></g>
+                    <g id="11" class="booth"><rect x="290.07" y="279.94" width="10.85" height="10.85"/><text x="295.49" y="285.36">11</text></g>
+                    <g id="12" class="booth"><rect x="301.42" y="279.94" width="10.85" height="10.85"/><text x="306.84" y="285.36">12</text></g>
+                    <g id="13" class="booth"><rect x="312.76" y="279.94" width="10.85" height="10.85"/><text x="318.18" y="285.36">13</text></g>
+                    <g id="14" class="booth"><rect x="324.11" y="279.94" width="10.85" height="10.85"/><text x="329.53" y="285.36">14</text></g>
+                    <g id="15" class="booth"><rect x="335.45" y="279.94" width="10.85" height="10.85"/><text x="340.87" y="285.36">15</text></g>
+                    <g id="16" class="booth"><rect x="346.8" y="279.94" width="10.85" height="10.85"/><text x="352.22" y="285.36">16</text></g>
+                    <g id="17" class="booth"><rect x="358.15" y="279.94" width="10.85" height="10.85"/><text x="363.57" y="285.36">17</text></g>
+                    <g id="18" class="booth"><rect x="395.73" y="279.94" width="10.85" height="10.85"/><text x="401.15" y="285.36">18</text></g>
+                    <g id="19" class="booth"><rect x="407.08" y="279.94" width="10.85" height="10.85"/><text x="412.50" y="285.36">19</text></g>
+                    <g id="20" class="booth"><rect x="418.42" y="279.94" width="10.85" height="10.85"/><text x="423.84" y="285.36">20</text></g>
+                    <g id="21" class="booth"><rect x="429.77" y="279.94" width="10.85" height="10.85"/><text x="435.19" y="285.36">21</text></g>
+                    <g id="22" class="booth"><rect x="441.11" y="279.94" width="10.85" height="10.85"/><text x="446.53" y="285.36">22</text></g>
+                    <g id="23" class="booth"><rect x="452.46" y="279.94" width="10.85" height="10.85"/><text x="457.88" y="285.36">23</text></g>
+                    <g id="24" class="booth"><rect x="463.81" y="279.94" width="10.85" height="10.85"/><text x="469.23" y="285.36">24</text></g>
+                    <g id="25" class="booth"><rect x="475.15" y="279.94" width="10.85" height="10.85"/><text x="480.57" y="285.36">25</text></g>
+                    <g id="26" class="booth"><rect x="486.5" y="279.94" width="10.85" height="10.85"/><text x="491.92" y="285.36">26</text></g>
+                    <g id="27" class="booth"><rect x="275.38" y="256.79" width="10.85" height="10.85"/><text x="280.80" y="262.21">27</text></g>
+                    <g id="28" class="booth"><rect x="286.72" y="256.79" width="10.85" height="10.85"/><text x="292.14" y="262.21">28</text></g>
+                    <g id="29" class="booth"><rect x="309.39" y="256.79" width="10.85" height="10.85"/><text x="314.81" y="262.21">29</text></g>
+                    <g id="30" class="booth"><rect x="337.74" y="256.79" width="10.85" height="10.85"/><text x="343.16" y="262.21">30</text></g>
+                    <g id="31" class="booth"><rect x="349.08" y="256.79" width="10.85" height="10.85"/><text x="354.50" y="262.21">31</text></g>
+                    <g id="32" class="booth"><rect x="372.34" y="256.79" width="10.85" height="10.85"/><text x="377.76" y="262.21">32</text></g>
+                    <g id="33" class="booth"><rect x="383.69" y="256.79" width="10.85" height="10.85"/><text x="389.11" y="262.21">33</text></g>
+                    <g id="34" class="booth"><rect x="409.18" y="256.79" width="10.85" height="10.85"/><text x="414.60" y="262.21">34</text></g>
+                    <g id="35" class="booth"><rect x="431.97" y="256.79" width="10.85" height="10.85"/><text x="437.39" y="262.21">35</text></g>
+                    <g id="36" class="booth"><rect x="443.32" y="256.79" width="10.85" height="10.85"/><text x="448.74" y="262.21">36</text></g>
+                    <g id="37" class="booth"><rect x="466.01" y="256.79" width="10.85" height="10.85"/><text x="471.43" y="262.21">37</text></g>
+                    <g id="38" class="booth"><rect x="477.36" y="256.79" width="10.85" height="10.85"/><text x="482.78" y="262.21">38</text></g>
+                    <g id="39" class="booth"><rect x="504.22" y="259.91" width="10.85" height="10.85"/><text x="509.64" y="265.33">39</text></g>
+                    <g id="40" class="booth"><rect x="504.22" y="248.5" width="10.85" height="10.85"/><text x="509.64" y="253.92">40</text></g>
+                    <g id="41" class="booth"><rect x="515.43" y="248.5" width="10.85" height="10.85"/><text x="520.85" y="253.92">41</text></g>
+                    <g id="42" class="booth"><rect x="526.77" y="248.5" width="10.85" height="10.85"/><text x="532.19" y="253.92">42</text></g>
+                    <g id="43" class="booth"><rect x="538.12" y="248.5" width="10.85" height="10.85"/><text x="543.54" y="253.92">43</text></g>
+                    <g id="44" class="booth"><rect x="549.46" y="248.5" width="10.85" height="10.85"/><text x="554.88" y="253.92">44</text></g>
+                    <g id="45" class="booth"><rect x="560.81" y="248.5" width="10.85" height="10.85"/><text x="566.23" y="253.92">45</text></g>
+                    <g id="46" class="booth"><rect x="572.15" y="248.5" width="10.85" height="10.85"/><text x="577.57" y="253.92">46</text></g>
+                    <g id="47" class="booth"><rect x="614.64" y="248.5" width="10.85" height="10.85"/><text x="620.06" y="253.92">47</text></g>
+                    <g id="48" class="booth"><rect x="625.98" y="248.5" width="10.85" height="10.85"/><text x="631.40" y="253.92">48</text></g>
+                    <g id="49" class="booth"><rect x="637.33" y="248.5" width="10.85" height="10.85"/><text x="642.75" y="253.92">49</text></g>
+                    <g id="50" class="booth"><rect x="648.67" y="248.5" width="10.85" height="10.85"/><text x="654.09" y="253.92">50</text></g>
+
+<g id="51" class="booth"><rect x="661.85" y="234.09" width="10.85" height="10.85"/><text x="667.27" y="239.51">51</text></g>
+                    <g id="52" class="booth"><rect x="661.85" y="222.74" width="10.85" height="10.85"/><text x="667.27" y="228.16">52</text></g>
+                    <g id="53" class="booth"><rect x="661.85" y="211.39" width="10.85" height="10.85"/><text x="667.27" y="216.81">53</text></g>
+                    <g id="54" class="booth"><rect x="661.78" y="189.98" width="10.85" height="10.85"/><text x="667.20" y="195.40">54</text></g>
+                    <g id="55" class="booth"><rect x="661.78" y="178.63" width="10.85" height="10.85"/><text x="667.20" y="184.05">55</text></g>
+                    <g id="56" class="booth"><rect x="661.78" y="167.29" width="10.85" height="10.85"/><text x="667.20" y="172.71">56</text></g>
+                    <g id="57" class="booth"><rect x="642.58" y="154.61" width="10.85" height="10.85"/><text x="648.00" y="160.03">57</text></g>
+                    <g id="58" class="booth"><rect x="631.23" y="154.61" width="10.85" height="10.85"/><text x="636.65" y="160.03">58</text></g>
+                    <g id="59" class="booth"><rect x="619.88" y="154.61" width="10.85" height="10.85"/><text x="625.30" y="160.03">59</text></g>
+                    <g id="60" class="booth"><rect x="608.54" y="154.61" width="10.85" height="10.85"/><text x="613.96" y="160.03">60</text></g>
+                    <g id="61" class="booth"><rect x="597.19" y="154.61" width="10.85" height="10.85"/><text x="602.61" y="160.03">61</text></g>
+                    <g id="62" class="booth"><rect x="585.85" y="154.61" width="10.85" height="10.85"/><text x="591.27" y="160.03">62</text></g>
+                    <g id="63" class="booth"><rect x="574.5" y="154.61" width="10.85" height="10.85"/><text x="579.92" y="160.03">63</text></g>
+                    <g id="64" class="booth"><rect x="563.16" y="154.61" width="10.85" height="10.85"/><text x="568.58" y="160.03">64</text></g>
+                    <g id="65" class="booth"><rect x="551.81" y="154.61" width="10.85" height="10.85"/><text x="557.23" y="160.03">65</text></g>
+                    <g id="66" class="booth"><rect x="540.46" y="154.61" width="10.85" height="10.85"/><text x="545.88" y="160.03">66</text></g>
+                    <g id="67" class="booth"><rect x="494.18" y="154.61" width="10.85" height="10.85"/><text x="499.60" y="160.03">67</text></g>
+                    <g id="68" class="booth"><rect x="482.83" y="154.61" width="10.85" height="10.85"/><text x="488.25" y="160.03">68</text></g>
+                    <g id="69" class="booth"><rect x="471.49" y="154.61" width="10.85" height="10.85"/><text x="476.91" y="160.03">69</text></g>
+                    <g id="70" class="booth"><rect x="460.14" y="154.61" width="10.85" height="10.85"/><text x="465.56" y="160.03">70</text></g>
+                    <g id="71" class="booth"><rect x="448.8" y="154.61" width="10.85" height="10.85"/><text x="454.22" y="160.03">71</text></g>
+                    <g id="72" class="booth"><rect x="213.77" y="154.61" width="10.85" height="10.85"/><text x="219.19" y="160.03">72</text></g>
+                    <g id="73" class="booth"><rect x="202.42" y="154.61" width="10.85" height="10.85"/><text x="207.84" y="160.03">73</text></g>
+                    <g id="74" class="booth"><rect x="191.07" y="154.61" width="10.85" height="10.85"/><text x="196.49" y="160.03">74</text></g>
+                    <g id="75" class="booth"><rect x="179.73" y="154.61" width="10.85" height="10.85"/><text x="185.15" y="160.03">75</text></g>
+                    <g id="76" class="booth"><rect x="168.38" y="154.61" width="10.85" height="10.85"/><text x="173.80" y="160.03">76</text></g>
+                    <g id="77" class="booth"><rect x="157.04" y="154.61" width="10.85" height="10.85"/><text x="162.46" y="160.03">77</text></g>
+                    <g id="78" class="booth"><rect x="145.69" y="154.61" width="10.85" height="10.85"/><text x="151.11" y="160.03">78</text></g>
+                    <g id="79" class="booth"><rect x="134.35" y="154.61" width="10.85" height="10.85"/><text x="139.77" y="160.03">79</text></g>
+                    <g id="80" class="booth"><rect x="123" y="154.61" width="10.85" height="10.85"/><text x="128.42" y="160.03">80</text></g>
+                    <g id="81" class="booth"><rect x="111.65" y="154.61" width="10.85" height="10.85"/><text x="117.07" y="160.03">81</text></g>
+                    <g id="82" class="booth"><rect x="90.52" y="166.65" width="10.85" height="10.85"/><text x="95.94" y="172.07">82</text></g>
+                    <g id="83" class="booth"><rect x="90.52" y="177.99" width="10.85" height="10.85"/><text x="95.94" y="183.41">83</text></g>
+                    <g id="84" class="booth"><rect x="90.52" y="189.34" width="10.85" height="10.85"/><text x="95.94" y="194.76">84</text></g>
+                    <g id="85" class="booth"><rect x="90.52" y="211.58" width="10.85" height="10.85"/><text x="95.94" y="217.00">85</text></g>
+                    <g id="86" class="booth"><rect x="90.52" y="222.92" width="10.85" height="10.85"/><text x="95.94" y="228.34">86</text></g>
+                    <g id="87" class="booth"><rect x="90.52" y="234.27" width="10.85" height="10.85"/><text x="95.94" y="239.69">87</text></g>
+                    <g id="88" class="booth"><rect x="109.47" y="248.5" width="10.85" height="10.85"/><text x="114.89" y="253.92">88</text></g>
+                    <g id="89" class="booth"><rect x="120.82" y="248.5" width="10.85" height="10.85"/><text x="126.24" y="253.92">89</text></g>
+                    <g id="90" class="booth"><rect x="132.16" y="248.5" width="10.85" height="10.85"/><text x="137.58" y="253.92">90</text></g>
+                    <g id="91" class="booth"><rect x="213.52" y="222.92" width="10.85" height="10.85"/><text x="218.94" y="228.34">91</text></g>
+                    <g id="92" class="booth"><rect x="224.86" y="222.92" width="10.85" height="10.85"/><text x="230.28" y="228.34">92</text></g>
+                    <g id="93" class="booth"><rect x="247.26" y="222.91" width="10.85" height="10.85"/><text x="252.68" y="228.34">93</text></g>
+                    <g id="94" class="booth"><rect x="258.61" y="222.91" width="10.85" height="10.85"/><text x="264.03" y="228.34">94</text></g>
+                    <g id="95" class="booth"><rect x="269.96" y="222.91" width="10.85" height="10.85"/><text x="275.38" y="228.34">95</text></g>
+                    <g id="96" class="booth"><rect x="281.3" y="222.91" width="10.85" height="10.85"/><text x="286.72" y="228.34">96</text></g>
+                    <g id="97" class="booth"><rect x="292.65" y="222.91" width="10.85" height="10.85"/><text x="298.07" y="228.34">97</text></g>
+                    <g id="98" class="booth"><rect x="292.65" y="211.42" width="10.85" height="10.85"/><text x="298.07" y="216.84">98</text></g>
+                    <g id="99" class="booth"><rect x="281.3" y="211.42" width="10.85" height="10.85"/><text x="286.72" y="216.84">99</text></g>
+                    <g id="100" class="booth"><rect x="269.96" y="211.42" width="10.85" height="10.85"/><text x="275.38" y="216.84">100</text></g>
+                    <g id="101" class="booth"><rect x="258.61" y="211.42" width="10.85" height="10.85"/><text x="264.03" y="216.84">101</text></g>
+                    <g id="102" class="booth"><rect x="247.26" y="211.42" width="10.85" height="10.85"/><text x="252.68" y="216.84">102</text></g>
+                    <g id="103" class="booth"><rect x="224.86" y="211.42" width="10.85" height="10.85"/><text x="230.28" y="216.84">103</text></g>
+                    <g id="104" class="booth"><rect x="213.52" y="211.42" width="10.85" height="10.85"/><text x="218.94" y="216.84">104</text></g>
+                    <g id="105" class="booth"><rect x="292.65" y="189.34" width="10.85" height="10.85"/><text x="298.07" y="194.76">105</text></g>
+                    <g id="106" class="booth"><rect x="281.3" y="189.34" width="10.85" height="10.85"/><text x="286.72" y="194.76">106</text></g>
+                    <g id="107" class="booth"><rect x="269.96" y="189.34" width="10.85" height="10.85"/><text x="275.38" y="194.76">107</text></g>
+                    <g id="108" class="booth"><rect x="258.61" y="189.34" width="10.85" height="10.85"/><text x="264.03" y="194.76">108</text></g>
+                    <g id="109" class="booth"><rect x="247.26" y="189.34" width="10.85" height="10.85"/><text x="252.68" y="194.76">109</text></g>
+                    <g id="110" class="booth"><rect x="224.86" y="189.34" width="10.85" height="10.85"/><text x="230.28" y="194.76">110</text></g>
+                    <g id="111" class="booth"><rect x="213.52" y="189.34" width="10.85" height="10.85"/><text x="218.94" y="194.76">111</text></g>
+                    <g id="112" class="booth"><rect x="191.58" y="189.34" width="10.85" height="10.85"/><text x="197.00" y="194.76">112</text></g>
+                    <g id="113" class="booth"><rect x="180.24" y="189.34" width="10.85" height="10.85"/><text x="185.66" y="194.76">113</text></g>
+                    <g id="114" class="booth"><rect x="158.78" y="189.34" width="10.85" height="10.85"/><text x="164.20" y="194.76">114</text></g>
+                    <g id="115" class="booth"><rect x="147.43" y="189.34" width="10.85" height="10.85"/><text x="152.85" y="194.76">115</text></g>
+                    <g id="116" class="booth"><rect x="124.17" y="189.34" width="10.85" height="10.85"/><text x="129.59" y="194.76">116</text></g>
+                    <g id="117" class="booth"><rect x="112.83" y="189.34" width="10.85" height="10.85"/><text x="118.25" y="194.76">117</text></g>
+                    <g id="118" class="booth"><rect x="112.83" y="177.99" width="10.85" height="10.85"/><text x="118.25" y="183.41">118</text></g>
+                    <g id="119" class="booth"><rect x="124.17" y="177.99" width="10.85" height="10.85"/><text x="129.59" y="183.41">119</text></g>
+                    <g id="120" class="booth"><rect x="147.43" y="177.99" width="10.85" height="10.85"/><text x="152.85" y="183.41">120</text></g>
+                    <g id="121" class="booth"><rect x="158.78" y="177.99" width="10.85" height="10.85"/><text x="164.20" y="183.41">121</text></g>
+                    <g id="122" class="booth"><rect x="179.99" y="177.99" width="10.85" height="10.85"/><text x="185.41" y="183.41">122</text></g>
+                    <g id="123" class="booth"><rect x="191.33" y="177.99" width="10.85" height="10.85"/><text x="196.75" y="183.41">123</text></g>
+                    <g id="124" class="booth"><rect x="213.52" y="177.99" width="10.85" height="10.85"/><text x="218.94" y="183.41">124</text></g>
+                    <g id="125" class="booth"><rect x="224.86" y="177.99" width="10.85" height="10.85"/><text x="230.28" y="183.41">125</text></g>
+                    <g id="126" class="booth"><rect x="247.26" y="177.99" width="10.85" height="10.85"/><text x="252.68" y="183.41">126</text></g>
+                    <g id="127" class="booth"><rect x="258.61" y="177.99" width="10.85" height="10.85"/><text x="264.03" y="183.41">127</text></g>
+                    <g id="128" class="booth"><rect x="269.96" y="177.99" width="10.85" height="10.85"/><text x="275.38" y="183.41">128</text></g>
+                    <g id="129" class="booth"><rect x="281.3" y="177.99" width="10.85" height="10.85"/><text x="286.72" y="183.41">129</text></g>
+                    <g id="130" class="booth"><rect x="292.65" y="177.99" width="10.85" height="10.85"/><text x="298.07" y="183.41">130</text></g>
+                    <g id="131" class="booth"><rect x="275.35" y="245.68" width="10.85" height="10.85"/><text x="280.77" y="251.10">131</text></g>
+                    <g id="132" class="booth"><rect x="286.7" y="245.68" width="10.85" height="10.85"/><text x="292.12" y="251.10">132</text></g>
+                    <g id="133" class="booth"><rect x="298.04" y="245.68" width="10.85" height="10.85"/><text x="303.46" y="251.10">133</text></g>
+                    <g id="134" class="booth"><rect x="309.39" y="245.68" width="10.85" height="10.85"/><text x="314.81" y="251.10">134</text></g>
+                    <g id="135" class="booth"><rect x="338" y="245.68" width="10.85" height="10.85"/><text x="343.42" y="251.10">135</text></g>
+                    <g id="136" class="booth"><rect x="349.35" y="245.68" width="10.85" height="10.85"/><text x="354.77" y="251.10">136</text></g>
+                    <g id="137" class="booth"><rect x="360.7" y="245.68" width="10.85" height="10.85"/><text x="366.12" y="251.10">137</text></g>
+                    <g id="138" class="booth"><rect x="372.04" y="245.68" width="10.85" height="10.85"/><text x="377.46" y="251.10">138</text></g>
+                    <g id="139" class="booth"><rect x="383.39" y="245.68" width="10.85" height="10.85"/><text x="388.81" y="251.10">139</text></g>
+                    <g id="140" class="booth"><rect x="409.27" y="245.68" width="10.85" height="10.85"/><text x="414.69" y="251.10">140</text></g>
+                    <g id="141" class="booth"><rect x="420.61" y="245.68" width="10.85" height="10.85"/><text x="426.03" y="251.10">141</text></g>
+                    <g id="142" class="booth"><rect x="431.96" y="245.68" width="10.85" height="10.85"/><text x="437.38" y="251.10">142</text></g>
+                    <g id="143" class="booth"><rect x="443.3" y="245.68" width="10.85" height="10.85"/><text x="448.72" y="251.10">143</text></g>
+                    <g id="144" class="booth"><rect x="454.65" y="245.68" width="10.85" height="10.85"/><text x="460.07" y="251.10">144</text></g>
+                    <g id="145" class="booth"><rect x="466" y="245.68" width="10.85" height="10.85"/><text x="471.42" y="251.10">145</text></g>
+                    <g id="146" class="booth"><rect x="477.34" y="245.68" width="10.85" height="10.85"/><text x="482.76" y="251.10">146</text></g>
+                    <g id="147" class="booth"><rect x="465.28" y="222.91" width="10.85" height="10.85"/><text x="470.70" y="228.33">147</text></g>
+                    <g id="148" class="booth"><rect x="476.62" y="222.91" width="10.85" height="10.85"/><text x="482.04" y="228.33">148</text></g>
+                    <g id="149" class="booth"><rect x="487.97" y="222.91" width="10.85" height="10.85"/><text x="493.39" y="228.33">149</text></g>
+                    <g id="150" class="booth"><rect x="499.32" y="222.91" width="10.85" height="10.85"/><text x="504.74" y="228.33">150</text></g>
+                    <g id="151" class="booth"><rect x="521.48" y="222.91" width="10.85" height="10.85"/><text x="526.90" y="228.33">151</text></g>
+                    <g id="152" class="booth"><rect x="532.83" y="222.91" width="10.85" height="10.85"/><text x="538.25" y="228.33">152</text></g>
+                    <g id="153" class="booth"><rect x="544.17" y="222.91" width="10.85" height="10.85"/><text x="549.59" y="228.33">153</text></g>
+                    <g id="154" class="booth"><rect x="555.52" y="222.91" width="10.85" height="10.85"/><text x="560.94" y="228.33">154</text></g>
+                    <g id="155" class="booth"><rect x="614.64" y="222.74" width="10.85" height="10.85"/><text x="620.06" y="228.16">155</text></g>
+                    <g id="156" class="booth"><rect x="625.98" y="222.74" width="10.85" height="10.85"/><text x="631.40" y="228.16">156</text></g>
+                    <g id="157" class="booth"><rect x="637.33" y="222.74" width="10.85" height="10.85"/><text x="642.75" y="228.16">157</text></g>
+                    <g id="158" class="booth"><rect x="637.33" y="211.39" width="10.85" height="10.85"/><text x="642.75" y="216.81">158</text></g>
+                    <g id="159" class="booth"><rect x="625.98" y="211.39" width="10.85" height="10.85"/><text x="631.40" y="216.81">159</text></g>
+                    <g id="160" class="booth"><rect x="614.64" y="211.39" width="10.85" height="10.85"/><text x="620.06" y="216.81">160</text></g>
+                    <g id="161" class="booth"><rect x="555.77" y="211.42" width="10.85" height="10.85"/><text x="561.19" y="216.84">161</text></g>
+                    <g id="162" class="booth"><rect x="544.42" y="211.42" width="10.85" height="10.85"/><text x="549.84" y="216.84">162</text></g>
+                    <g id="163" class="booth"><rect x="533.08" y="211.42" width="10.85" height="10.85"/><text x="538.50" y="216.84">163</text></g>
+                    <g id="164" class="booth"><rect x="521.73" y="211.42" width="10.85" height="10.85"/><text x="527.15" y="216.84">164</text></g>
+                    <g id="165" class="booth"><rect x="499.32" y="211.42" width="10.85" height="10.85"/><text x="504.74" y="216.84">165</text></g>
+                    <g id="166" class="booth"><rect x="487.97" y="211.42" width="10.85" height="10.85"/><text x="493.39" y="216.84">166</text></g>
+                    <g id="167" class="booth"><rect x="476.62" y="211.42" width="10.85" height="10.85"/><text x="482.04" y="216.84">167</text></g>
+                    <g id="168" class="booth"><rect x="465.28" y="211.42" width="10.85" height="10.85"/><text x="470.70" y="216.84">168</text></g>
+                    <g id="169" class="booth"><rect x="465.03" y="188.76" width="10.85" height="10.85"/><text x="470.45" y="194.18">169</text></g>
+                    <g id="170" class="booth"><rect x="476.37" y="188.76" width="10.85" height="10.85"/><text x="481.79" y="194.18">170</text></g>
+                    <g id="171" class="booth"><rect x="487.72" y="188.76" width="10.85" height="10.85"/><text x="493.14" y="194.18">171</text></g>
+                    <g id="172" class="booth"><rect x="499.07" y="188.76" width="10.85" height="10.85"/><text x="504.49" y="194.18">172</text></g>
+                    <g id="173" class="booth"><rect x="521.73" y="188.76" width="10.85" height="10.85"/><text x="527.15" y="194.18">173</text></g>
+                    <g id="174" class="booth"><rect x="533.08" y="188.76" width="10.85" height="10.85"/><text x="538.50" y="194.18">174</text></g>
+                    <g id="175" class="booth"><rect x="544.42" y="188.76" width="10.85" height="10.85"/><text x="549.84" y="194.18">175</text></g>
+                    <g id="176" class="booth"><rect x="555.77" y="188.76" width="10.85" height="10.85"/><text x="561.19" y="194.18">176</text></g>
+                    <g id="177" class="booth"><rect x="614.89" y="188.76" width="10.85" height="10.85"/><text x="620.31" y="194.18">177</text></g>
+                    <g id="178" class="booth"><rect x="626.23" y="188.76" width="10.85" height="10.85"/><text x="631.65" y="194.18">178</text></g>
+                    <g id="179" class="booth"><rect x="637.58" y="188.76" width="10.85" height="10.85"/><text x="643.00" y="194.18">179</text></g>
+                    <g id="180" class="booth"><rect x="637.58" y="177.1" width="10.85" height="10.85"/><text x="643.00" y="182.52">180</text></g>
+                    <g id="181" class="booth"><rect x="626.23" y="177.1" width="10.85" height="10.85"/><text x="631.65" y="182.52">181</text></g>
+                    <g id="182" class="booth"><rect x="614.89" y="177.1" width="10.85" height="10.85"/><text x="620.31" y="182.52">182</text></g>
+                    <g id="183" class="booth"><rect x="555.77" y="177.1" width="10.85" height="10.85"/><text x="561.19" y="182.52">183</text></g>
+                    <g id="184" class="booth"><rect x="544.42" y="177.1" width="10.85" height="10.85"/><text x="549.84" y="182.52">184</text></g>
+                    <g id="185" class="booth"><rect x="533.08" y="177.1" width="10.85" height="10.85"/><text x="538.50" y="182.52">185</text></g>
+                    <g id="186" class="booth"><rect x="521.73" y="177.1" width="10.85" height="10.85"/><text x="527.15" y="182.52">186</text></g>
+                    <g id="187" class="booth"><rect x="498.82" y="177.46" width="10.85" height="10.85"/><text x="504.24" y="182.88">187</text></g>
+                    <g id="188" class="booth"><rect x="487.47" y="177.46" width="10.85" height="10.85"/><text x="492.89" y="182.88">188</text></g>
+                    <g id="189" class="booth"><rect x="476.12" y="177.46" width="10.85" height="10.85"/><text x="481.54" y="182.88">189</text></g>
+                    <g id="190" class="booth"><rect x="464.78" y="177.46" width="10.85" height="10.85"/><text x="470.20" y="182.88">190</text></g>
+
+<g id="G1" class="booth"><rect x="112.27" y="211.92" width="22.74" height="22.74"/><text x="123.64" y="223.29">G1</text></g>
+                    <g id="G2" class="booth"><rect x="146.91" y="211.92" width="22.74" height="22.74"/><text x="158.28" y="223.29">G2</text></g>
+                    <g id="G3" class="booth"><rect x="179.71" y="211.92" width="22.74" height="22.74"/><text x="191.08" y="223.29">G3</text></g>
+                    <g id="G4" class="booth"><rect x="314.85" y="177.84" width="22.74" height="22.74"/><text x="326.22" y="189.21">G4</text></g>
+                    <g id="G5" class="booth"><rect x="337.98" y="211.92" width="22.74" height="22.74"/><text x="349.35" y="223.29">G5</text></g>
+                    <g id="G6" class="booth"><rect x="371.82" y="211.92" width="22.74" height="22.74"/><text x="383.19" y="223.29">G6</text></g>
+                    <g id="G7" class="booth"><rect x="406.55" y="211.92" width="22.74" height="22.74"/><text x="417.92" y="223.29">G7</text></g>
+                    <g id="G8" class="booth"><rect x="429.24" y="177.84" width="22.74" height="22.74"/><text x="440.61" y="189.21">G8</text></g>
+                    <g id="G9" class="booth"><rect x="580.93" y="177.84" width="22.74" height="22.74"/><text x="592.30" y="189.21">G9</text></g>
+                    <g id="G10" class="booth"><rect x="579.22" y="211.92" width="22.74" height="22.74"/><text x="590.59" y="223.29">G10</text></g>
+
+<g id="R1" class="booth"><rect x="314.84" y="211.92" width="11.37" height="22.74"/><text x="320.52" y="223.29">R1</text></g>
+                    <g id="R2" class="booth"><rect x="440.36" y="211.92" width="11.37" height="22.74"/><text x="446.04" y="223.29">R2</text></g>
+
+<g id="F1" class="booth"><rect x="499.39" y="324.16" width="22.74" height="11.37"/><text x="510.76" y="329.84">F1</text></g>
+                    <g id="F2" class="booth"><rect x="465" y="324.16" width="22.74" height="11.37"/><text x="476.37" y="329.84">F2</text></g>
+                    <g id="F3" class="booth"><rect x="329.39" y="329.38" width="22.74" height="11.37"/><text x="340.76" y="335.06">F3</text></g>
+                    <g id="F4" class="booth"><rect x="294.88" y="328.55" width="22.74" height="11.37"/><text x="306.25" y="334.23">F4</text></g>
+                    <g id="F5" class="booth"><rect x="123.89" y="333.66" width="22.74" height="11.37" transform="translate(154.98 -25.43) rotate(24.83)"/><text transform="translate(131.97 339.52) rotate(24.83)">F5</text></g>
+                    <g id="F6" class="booth"><rect x="94.57" y="318.06" width="22.74" height="11.37" transform="translate(203.52 -2.62) rotate(34.77)"/><text transform="translate(105.94 323.74) rotate(34.77)">F6</text></g>
+                </svg>
+
+                <svg x-show="currentZone === 'outdoor'" id="outdoor-svg" viewBox="0 0 965.21 842" xmlns="http://www.w3.org/2000/svg" x-cloak>
+                    <image href="https://i.postimg.cc/ryHz30TC/bkg-01-01.jpg" width="965.21" height="842" x="0" y="0" opacity="0.6"/>
+                    
+                    <g id="C1" class="booth"><rect x="825.98" y="430.54" width="18.66" height="10.97" transform="translate(425.68 -389.82) rotate(44.84)"/><text font-size="4.2" transform="translate(710.1 510.2) rotate(-.16)">C1</text></g>
+                    <g id="C2" class="booth"><rect x="834.2" y="422.27" width="18.66" height="10.97" transform="translate(422.24 -398.02) rotate(44.84)"/><text font-size="4.2" transform="translate(718.32 501.93) rotate(-.16)">C2</text></g>
+                    <g id="C3" class="booth"><rect x="842.39" y="414.03" width="18.66" height="10.97" transform="translate(418.82 -406.19) rotate(44.84)"/><text font-size="4.2" transform="translate(726.51 493.69) rotate(-.16)">C3</text></g>
+                    <g id="C4" class="booth"><rect x="849.92" y="406.46" width="18.66" height="10.97" transform="translate(415.67 -413.71) rotate(44.84)"/><text font-size="4.2" transform="translate(734.04 486.12) rotate(-.16)">C4</text></g>
+                    <g id="C5" class="booth"><rect x="857.97" y="398.36" width="18.66" height="10.97" transform="translate(412.3 -421.74) rotate(44.84)"/><text font-size="4.2" transform="translate(742.09 478.02) rotate(-.16)">C5</text></g>
+                    <g id="C6" class="booth"><rect x="866" y="390.29" width="18.66" height="10.97" transform="translate(408.94 -429.74) rotate(44.84)"/><text font-size="4.2" transform="translate(750.12 469.95) rotate(-.16)">C6</text></g>
+                    <g id="C7" class="booth"><rect x="882.26" y="374.19" width="18.66" height="10.97" transform="translate(402.32 -445.9) rotate(44.84)"/><text font-size="4.2" transform="translate(766.38 453.85) rotate(-.16)">C7</text></g>
+                    <g id="C8" class="booth"><rect x="890.57" y="365.84" width="18.66" height="10.97" transform="translate(398.85 -454.18) rotate(44.84)"/><text font-size="4.2" transform="translate(774.69 445.5) rotate(-.16)">C8</text></g>
+                    <g id="C9" class="booth"><rect x="898.85" y="357.51" width="18.66" height="10.97" transform="translate(395.39 -462.44) rotate(44.84)"/><text font-size="4.2" transform="translate(782.97 437.17) rotate(-.16)">C9</text></g>
+                    <g id="C10" class="booth"><rect x="906.31" y="350.01" width="18.66" height="10.97" transform="translate(392.27 -469.88) rotate(44.84)"/><text font-size="4.2" transform="translate(790.43 429.67) rotate(-.16)">C10</text></g>
+                    <g id="C11" class="booth"><rect x="914.28" y="341.97" width="18.66" height="10.97" transform="translate(388.91 -477.84) rotate(44.84)"/><text font-size="4.2" transform="translate(798.4 421.63) rotate(-.16)">C11</text></g>
+                    <g id="C12" class="booth"><rect x="922.25" y="333.84" width="18.66" height="10.97" transform="translate(385.5 -485.83) rotate(44.84)"/><text font-size="4.2" transform="translate(806.37 413.5) rotate(-.16)">C12</text></g>
+                    <g id="C13" class="booth"><rect x="938.45" y="317.42" width="18.66" height="10.97" transform="translate(378.64 -502.02) rotate(44.84)"/><text font-size="4.2" transform="translate(822.57 397.08) rotate(-.16)">C13</text></g>
+                    <g id="C14" class="booth"><rect x="946.45" y="309.38" width="18.66" height="10.97" transform="translate(375.29 -510) rotate(44.84)"/><text font-size="4.2" transform="translate(830.57 389.04) rotate(-.16)">C14</text></g>
+                    <g id="C15" class="booth"><rect x="954.53" y="301.25" width="18.66" height="10.97" transform="translate(371.91 -518.06) rotate(44.84)"/><text font-size="4.2" transform="translate(838.65 380.91) rotate(-.16)">C15</text></g>
+                    <g id="C16" class="booth"><rect x="962.17" y="293.56" width="18.66" height="10.97" transform="translate(368.72 -525.69) rotate(44.84)"/><text font-size="4.2" transform="translate(846.29 373.22) rotate(-.16)">C16</text></g>
+                    <g id="C17" class="booth"><rect x="970.11" y="285.57" width="18.66" height="10.97" transform="translate(365.39 -533.61) rotate(44.84)"/><text font-size="4.2" transform="translate(854.23 365.23) rotate(-.16)">C17</text></g>
+                    <g id="C18" class="booth"><rect x="977.73" y="277.91" width="18.66" height="10.97" transform="translate(362.21 -541.21) rotate(44.84)"/><text font-size="4.2" transform="translate(861.85 357.57) rotate(-.16)">C18</text></g>
+                    <g id="C19" class="booth"><rect x="994.36" y="202.03" width="18.66" height="10.97" transform="translate(313.54 -575) rotate(44.84)"/><text font-size="4.2" transform="translate(878.48 281.69) rotate(-.16)">C19</text></g>
+                    <g id="C20" class="booth"><rect x="1002.24" y="194.1" width="18.66" height="10.97" transform="translate(310.24 -582.87) rotate(44.84)"/><text font-size="4.2" transform="translate(886.36 273.76) rotate(-.16)">C20</text></g>
+                    <g id="C21" class="booth"><rect x="1009.92" y="186.38" width="18.66" height="10.97" transform="translate(307.03 -590.53) rotate(44.84)"/><text font-size="4.2" transform="translate(894.04 266.04) rotate(-.16)">C21</text></g>
+                    <g id="C22" class="booth"><rect x="994.33" y="261.73" width="18.66" height="10.97" transform="translate(355.63 -557.62) rotate(44.84)"/><text font-size="4.2" transform="translate(878.45 341.39) rotate(-.16)">C22</text></g>
+                    <g id="C23" class="booth"><rect x="1002.74" y="253.27" width="18.66" height="10.97" transform="translate(352.11 -566.01) rotate(44.84)"/><text font-size="4.2" transform="translate(886.86 332.93) rotate(-.16)">C23</text></g>
+                    <g id="C24" class="booth"><rect x="834.32" y="361.68" width="18.66" height="10.97" transform="translate(379.56 -415.73) rotate(44.84)"/><text font-size="4.2" transform="translate(718.44 441.34) rotate(-.16)">C24</text></g>
+                    <g id="C25" class="booth"><rect x="842.32" y="353.64" width="18.66" height="10.97" transform="translate(376.22 -423.7) rotate(44.84)"/><text font-size="4.2" transform="translate(726.44 433.3) rotate(-.16)">C25</text></g>
+                    <g id="C26" class="booth"><rect x="850.48" y="345.43" width="18.66" height="10.97" transform="translate(372.8 -431.85) rotate(44.84)"/><text font-size="4.2" transform="translate(734.6 425.09) rotate(-.16)">C26</text></g>
+                    <g id="C27" class="booth"><rect x="858.48" y="337.39" width="18.66" height="10.97" transform="translate(369.46 -439.82) rotate(44.84)"/><text font-size="4.2" transform="translate(742.6 417.05) rotate(-.16)">C27</text></g>
+                    <g id="C28" class="booth"><rect x="866.34" y="329.48" width="18.66" height="10.97" transform="translate(366.17 -447.68) rotate(44.84)"/><text font-size="4.2" transform="translate(750.46 409.14) rotate(-.16)">C28</text></g>
+                    <g id="C29" class="booth"><rect x="882.72" y="314.31" width="18.66" height="10.97" transform="translate(360.23 -463.64) rotate(44.84)"/><text font-size="4.2" transform="translate(766.84 393.97) rotate(-.16)">C29</text></g>
+                    <g id="C30" class="booth"><rect x="890.37" y="306.62" width="18.66" height="10.97" transform="translate(357.04 -471.26) rotate(44.84)"/><text font-size="4.2" transform="translate(774.49 386.28) rotate(-.16)">C30</text></g>
+                    <g id="C31" class="booth"><rect x="897.87" y="299.08" width="18.66" height="10.97" transform="translate(353.9 -478.74) rotate(44.84)"/><text font-size="4.2" transform="translate(781.99 378.74) rotate(-.16)">C31</text></g>
+                    <g id="C32" class="booth"><rect x="905.66" y="291.24" width="18.66" height="10.97" transform="translate(350.64 -486.51) rotate(44.84)"/><text font-size="4.2" transform="translate(789.78 370.9) rotate(-.16)">C32</text></g>
+                    <g id="C33" class="booth"><rect x="913.08" y="283.77" width="18.66" height="10.97" transform="translate(347.54 -493.92) rotate(44.84)"/><text font-size="4.2" transform="translate(797.2 363.43) rotate(-.16)">C33</text></g>
+                    <g id="C34" class="booth"><rect x="929.97" y="266.79" width="18.66" height="10.97" transform="translate(340.47 -510.77) rotate(44.84)"/><text font-size="4.2" transform="translate(814.09 346.45) rotate(-.16)">C34</text></g>
+                    <g id="C35" class="booth"><rect x="938.18" y="258.53" width="18.66" height="10.97" transform="translate(337.04 -518.96) rotate(44.84)"/><text font-size="4.2" transform="translate(822.3 338.19) rotate(-.16)">C35</text></g>
+                    <g id="C36" class="booth"><rect x="946.42" y="250.24" width="18.66" height="10.97" transform="translate(333.59 -527.19) rotate(44.84)"/><text font-size="4.2" transform="translate(830.54 329.9) rotate(-.16)">C36</text></g>
+                    <g id="C37" class="booth"><rect x="954.41" y="242.2" width="18.66" height="10.97" transform="translate(330.25 -535.16) rotate(44.84)"/><text font-size="4.2" transform="translate(838.53 321.86) rotate(-.16)">C37</text></g>
+                    <g id="C38" class="booth"><rect x="962.52" y="234.05" width="18.66" height="10.97" transform="translate(326.86 -543.24) rotate(44.84)"/><text font-size="4.2" transform="translate(846.64 313.71) rotate(-.16)">C38</text></g>
+                    <g id="C39" class="booth"><rect x="970.28" y="226.24" width="18.66" height="10.97" transform="translate(323.61 -550.99) rotate(44.84)"/><text font-size="4.2" transform="translate(854.4 305.9) rotate(-.16)">C39</text></g>
+                    <g id="C40" class="booth"><rect x="977.98" y="218.51" width="18.66" height="10.97" transform="translate(320.39 -558.66) rotate(44.84)"/><text font-size="4.2" transform="translate(862.1 298.17) rotate(-.16)">C40</text></g>
+                </svg>
+            </div>
+            
+            <div x-show="tooltip.visible" x-bind:style="`top: ${tooltip.y}px; left: ${tooltip.x}px`" class="tooltip" x-cloak><div x-html="tooltip.content"></div></div>
+        </div>
+
+        <div x-show="selectedBooths.length > 0" x-transition class="fixed bottom-0 left-0 right-0 z-50 p-4">
+            <div class="max-w-7xl mx-auto neu-panel p-4 flex flex-col sm:flex-row justify-between items-center gap-4 bg-opacity-95 backdrop-blur-md">
+                <div class="flex-1 w-full">
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="booth in selectedBooths" :key="booth">
+                            <div class="neu-pressed px-3 py-1 rounded-lg flex items-center gap-3"><span class="font-bold text-emerald-700 text-sm" x-text="booth"></span><span class="text-[10px] text-gray-600" x-text="'RM ' + getPrice(booth).toLocaleString()"></span><button @click="toggleSelection(booth)" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button></div>
+                        </template>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                    <div class="text-right"><div class="text-xs text-gray-500" x-text="t('total')"></div><div class="text-xl font-bold text-emerald-600" x-text="'RM ' + totalPrice.toLocaleString()"></div></div>
+                    <button @click="modals.booking = true" class="px-8 py-3 neu-btn-primary font-bold shadow-lg" x-text="t('proceed') + '  ->'"></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="neu-panel mt-4 p-6 rounded-none rounded-t-2xl mx-2 mb-0" style="background: var(--bg-color);">
+        <div class="max-w-7xl mx-auto flex flex-row justify-between items-center relative z-10">
+            <div class="social-media-icons flex flex-row gap-4">
+                <a href="https://www.facebook.com/absolutbazaar" target="_blank" class="neu-icon-btn"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.instagram.com/absolutbazaar" target="_blank" class="neu-icon-btn"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.tiktok.com/@absolutevent" target="_blank" class="neu-icon-btn"><i class="fab fa-tiktok"></i></a>
+            </div>
+            <div class="flex items-center"><div class="text-right mr-3"><h3 class="font-bold text-sm text-gray-700">Absolut Bazaar</h3><p class="text-emerald-500 text-[10px]"><span x-text="t('contact')"></span>: info@absolutevent.my</p></div><div class="logo-container"><img src="https://i.imgur.com/uikzokX.png" alt="Absolut Bazaar" class="h-6 w-6 brightness-0 invert"></div></div>
+        </div>
+    </footer>
+
+    <div x-show="modals.booking" class="fixed inset-0 neu-modal-overlay z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="neu-panel max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative bg-white">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4"><h2 class="text-2xl font-bold text-gray-800 flex items-center"><i class="fas fa-file-signature text-emerald-500 mr-3"></i> <span x-text="t('bookingForm')"></span></h2><button @click="modals.booking = false" class="text-gray-400 hover:text-emerald-600"><i class="fas fa-times text-xl"></i></button></div>
+            <form @submit.prevent="generateSummary" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('companyName') + ' *'"></label><input type="text" x-model="form.companyName" required class="w-full neu-input"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('brandName') + ' *'"></label><input type="text" x-model="form.brandName" required class="w-full neu-input"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('pic') + ' *'"></label><input type="text" x-model="form.personInCharge" required class="w-full neu-input"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('phone') + ' *'"></label><input type="tel" x-model="form.phoneNumber" required class="w-full neu-input"></div>
+                    <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('email') + ' *'"></label><input type="email" x-model="form.email" required class="w-full neu-input"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Social Media</label><input type="url" x-model="form.socialMedia" class="w-full neu-input"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('sellingItems') + ' *'"></label><input type="text" x-model="form.sellingItems" required class="w-full neu-input"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('billingAddr') + ' *'"></label><textarea x-model="form.billingAddress" required rows="2" class="w-full neu-input"></textarea></div>
+                <div class="flex items-start gap-3 mt-2"><input type="checkbox" required class="mt-1 accent-emerald-600"><p class="text-xs text-gray-600">I understand that this is a booking request.</p></div>
+                <div class="flex gap-4 pt-4"><button type="button" @click="modals.booking = false" class="flex-1 py-3 neu-btn" x-text="t('cancel')"></button><button type="submit" class="flex-1 py-3 neu-btn-primary font-bold" x-text="t('review')"></button></div>
+            </form>
+        </div>
+    </div>
+
+    <div x-show="modals.summary" class="fixed inset-0 neu-modal-overlay z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="neu-panel max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 relative bg-white">
+            <div class="text-center mb-6 border-b border-gray-200 pb-4"><h2 class="text-2xl font-bold text-gray-800" x-text="t('confirmBooking')"></h2></div>
+            <div class="space-y-6">
+                <div class="neu-pressed p-4 rounded-xl"><div class="text-xs text-gray-500 uppercase font-bold mb-2">Customer Details</div><div class="text-sm font-bold text-gray-800" x-text="form.companyName"></div><div class="text-sm text-gray-600">PIC: <span x-text="form.personInCharge"></span></div><div class="text-sm text-gray-600">Phone: <span x-text="form.phoneNumber"></span></div></div>
+                <div>
+                    <h3 class="font-bold text-gray-700 mb-2" x-text="t('selectedBooths')"></h3>
+                    <div class="space-y-2 mb-4"><template x-for="booth in selectedBooths" :key="booth"><div class="flex justify-between items-center text-sm px-2 border-b border-dashed border-gray-300 pb-1"><span>Booth <strong x-text="booth"></strong></span><span class="text-gray-600" x-text="'RM ' + getPrice(booth).toLocaleString()"></span></div></template></div>
+                    <div class="neu-pressed p-4 rounded-xl flex justify-between items-center mb-2"><span class="text-gray-600 font-bold" x-text="t('total')"></span><span class="font-bold text-lg text-emerald-600" x-text="'RM ' + totalPrice.toLocaleString()"></span></div>
+                </div>
+                <div class="pt-4 flex flex-col gap-3">
+                    <button @click="handleBookingAction('absolut')" class="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-lg flex justify-center items-center font-bold"><i class="fab fa-whatsapp text-2xl mr-2"></i> <span x-text="t('send')"></span></button>
+                    <button @click="handleBookingAction('copy')" class="w-full py-3 neu-btn text-sm flex justify-center items-center font-bold text-gray-600"><i class="fas fa-copy mr-2"></i> <span x-text="t('copy')"></span></button>
+                    <button @click="modals.summary = false; modals.booking = true" class="w-full py-2 text-xs text-gray-400 hover:text-gray-600">Back to Edit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="modals.success" class="fixed inset-0 neu-modal-overlay z-[70] flex items-center justify-center p-4" x-cloak>
+        <div class="neu-panel max-w-md w-full p-8 relative animate-fade-in-up bg-white text-center">
+            <div class="mb-4"><div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-500 text-3xl shadow-md"><i class="fas fa-check"></i></div></div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Booking Generated!</h3>
+            <p class="text-sm text-gray-600 leading-relaxed mb-6">Kindly send booking summary to our sales representative.</p>
+            <button @click="modals.success = false" class="px-8 py-3 neu-btn-primary font-bold shadow-lg w-full">Okay, Got it!</button>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-Qo679Xk4fnmJPxhlHKSnlRwTPYFv24YZx9lOKmpGV-vGCAdM6ECZDxRNf0d2xZ5x/exec';
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('boothSystem', () => ({
+                lang: 'ms',
+                translations: {
+                    ms: {
+                        welcomeTitle: "Selamat Datang ke",
+                        step1: "<strong>Zoom & Gerakkan</strong> peta untuk lihat booth.",
+                        step2: "Klik <strong>Booth Kosong</strong> untuk pilih (Max 2).",
+                        step3: "<strong>Bayaran Penuh</strong> diperlukan.",
+                        // TEXT REPLACEMENT (MS)
+                        step4: "Semua vendor F&B mesti mempunyai <strong>Sijil Pengendalian Makanan dan Suntikan Typhoid</strong>.",
+                        schedule: "Jadual Acara (Tentatif)",
+                        understand: "Saya Faham",
+                        indoor: "Dewan",
+                        outdoor: "Kanopi",
+                        searchPlaceholder: "Cari Booth (cth: A1)",
+                        showLegend: "Tunjuk Petunjuk",
+                        hideLegend: "Tutup Petunjuk",
+                        syncing: "Sedang Sync...",
+                        selected: "Dipilih",
+                        total: "Jumlah (Bayaran Penuh)",
+                        proceed: "Teruskan",
+                        bookingForm: "Borang Tempahan",
+                        companyName: "Nama Syarikat",
+                        brandName: "Nama Jenama",
+                        pic: "Wakil syarikat (PIC)",
+                        phone: "No. Telefon",
+                        email: "Emel",
+                        sellingItems: "Produk Jualan",
+                        billingAddr: "Alamat Bil",
+                        cancel: "Batal",
+                        review: "Semak Ringkasan",
+                        confirmBooking: "Sahkan Tempahan",
+                        selectedBooths: "Booth Dipilih",
+                        send: "Hantar ke Absolut (+60)",
+                        copy: "Salin Ringkasan",
+                        partners: "Rakan Rasmi",
+                        contact: "Hubungi",
+                        help: "BANTUAN",
+                        comingSoon: "AKAN<br>DATANG"
+                    },
+                    en: {
+                        welcomeTitle: "Welcome to",
+                        step1: "<strong>Zoom & Pan</strong> to explore the floorplan.",
+                        step2: "Click <strong>Available Booths</strong> to select (Max 2).",
+                        step3: "<strong>Full Payment</strong> is required.",
+                        // TEXT REPLACEMENT (EN)
+                        step4: "All F&B vendors must possess a <strong>Food Handling Certificate & Typhoid Injection</strong>.",
+                        schedule: "Event Schedule (Tentative)",
+                        understand: "I Understand",
+                        indoor: "Indoor Hall",
+                        outdoor: "Outdoor",
+                        searchPlaceholder: "Search Booth (e.g. A1)",
+                        showLegend: "Show Legend",
+                        hideLegend: "Hide Legend",
+                        syncing: "Syncing...",
+                        selected: "Selected",
+                        total: "Total (Full Payment)",
+                        proceed: "Proceed",
+                        bookingForm: "Booking Form",
+                        companyName: "Company Name",
+                        brandName: "Brand Name",
+                        pic: "Person in Charge (PIC)",
+                        phone: "Phone (WhatsApp)",
+                        email: "Email Address",
+                        sellingItems: "Selling Items",
+                        billingAddr: "Billing Address",
+                        cancel: "Cancel",
+                        review: "Review Summary",
+                        confirmBooking: "Confirm Booking",
+                        selectedBooths: "Selected Booths",
+                        send: "Send to Absolut (+60)",
+                        copy: "Copy Summary",
+                        partners: "Official Partners",
+                        contact: "Contact",
+                        help: "HELP",
+                        comingSoon: "COMING<br>SOON"
+                    }
+                },
+                currentZone: 'indoor', loading: true, boothData: {}, selectedBooths: [], 
+                showLegend: true, 
+                filterAvailable: false,
+                dataCache: { indoor: null, outdoor: null },
+                modals: { welcome: true, booking: false, summary: false, success: false },
+                tooltip: { visible: false, x: 0, y: 0, content: '', id: '' },
+                notification: { visible: false, title: '', message: '', icon: '' },
+                searchQuery: '',
+                form: { companyName: '', brandName: '', personInCharge: '', phoneNumber: '', email: '', socialMedia: '', sellingItems: '', billingAddress: '' },
+                zoomLevel: 1, panX: 0, panY: 0, isDragging: false, startX: 0, startY: 0,
+
+                t(key) { return this.translations[this.lang][key] || key; },
+
+                async initSystem() { 
+                    this.fetchBooths();
+                    setTimeout(() => this.fetchBooths(true, 'outdoor'), 500);
+                    this.updateTransform();
+                    setInterval(() => this.backgroundSync(), 15000);
+                },
+                
+                switchZone(zone) { 
+                    this.currentZone = zone;
+                    this.selectedBooths = []; this.resetZoom(); 
+                    if (this.dataCache[zone]) {
+                        this.boothData = this.dataCache[zone];
+                        this.loading = false;
+                        setTimeout(() => this.refreshVisuals(), 50); this.fetchBooths(true);
+                    } else { this.boothData = {}; this.loading = true; this.fetchBooths(); }
+                },
+                
+                toggleFilter() {
+                    this.filterAvailable = !this.filterAvailable;
+                    this.refreshVisuals();
+                },
+                
+                async fetchBooths(isBackground = false, specificZone = null) {
+                    try {
+                        const targetZone = specificZone || this.currentZone;
+                        const sheetName = targetZone === 'indoor' ? 'indoorhall' : 'newoutdoor';
+                        const res = await fetch(`${SCRIPT_URL}?action=getBooths&zone=${sheetName}`);
+                        const json = await res.json();
+                        if(json && !json.error) {
+                            this.dataCache[targetZone] = json;
+                            if (!specificZone || specificZone === this.currentZone) { this.boothData = json; }
+                        }
+                        if(!isBackground && (!specificZone || specificZone === this.currentZone)) {
+                            this.loading = false;
+                            this.refreshVisuals();
+                        }
+                    } catch(e) { console.error("Fetch Error:", e); }
+                },
+
+                async backgroundSync() { await this.fetchBooths(true, 'indoor'); await this.fetchBooths(true, 'outdoor'); },
+
+                getBoothInfo(id) {
+                    if (this.boothData[id]) return this.boothData[id];
+                    const numeric = parseInt(id);
+                    if (!isNaN(numeric)) {
+                        const strId = numeric.toString();
+                        if (this.boothData[strId]) return this.boothData[strId];
+                    }
+                    const match = id.match(/^([a-zA-Z]+)(\d)$/);
+                    if (match) {
+                        const zeroId = match[1] + '0' + match[2];
+                        if (this.boothData[zeroId]) return this.boothData[zeroId];
+                    }
+                    return null;
+                },
+
+                refreshVisuals() {
+                    const container = this.$refs.floorplanContainer;
+                    container.querySelectorAll('.booth').forEach(el => {
+                        const id = el.id;
+                        el.onmouseenter = (e) => this.showTooltip(e, id); el.onmouseleave = () => this.hideTooltip();
+                        el.onclick = () => this.handleBoothClick(id);
+                        
+                        el.classList.remove('status-sold', 'status-available', 'selected', 'dimmed', 'price-4000', 'price-4500', 'price-2500', 'price-3000');
+                        
+                        if (this.selectedBooths.includes(id)) { el.classList.add('selected'); return; }
+                        
+                        const info = this.getBoothInfo(id); 
+                        if (!info) return; 
+
+                        const status = info.status ? info.status.toUpperCase() : 'AVAILABLE';
+                        const price = this.getPrice(id);
+                        
+                        if (this.filterAvailable && (status.includes('SOLD') || status.includes('BOOK') || status.includes('FULLY PAID'))) {
+                            el.classList.add('dimmed');
+                        }
+
+                        if (status.includes('SOLD') || status.includes('BOOK') || status.includes('FULLY PAID') || status.includes('PRE-BOOK')) { 
+                            el.classList.add('status-sold');
+                        } else {
+                            el.classList.add('status-available');
+                            // MAPPING PRICE TO VISUALS
+                            if (price == 4000) el.classList.add('price-4000'); // Indoor Inter
+                            else if (price == 4500) el.classList.add('price-4500'); // Indoor Corner
+                            else if (price == 2500) el.classList.add('price-2500'); // Outdoor Inter (Now Purple)
+                            else if (price == 3000) el.classList.add('price-3000'); // Outdoor Corner (Now Cyan)
+                        }
+                    });
+                },
+
+                toggleSelection(id) { this.handleBoothClick(id); },
+                
+                handleBoothClick(id) {
+                    const info = this.getBoothInfo(id);
+                    const status = info ? (info.status || 'AVAILABLE').toUpperCase() : 'AVAILABLE';
+                    if (status.includes('SOLD') || status.includes('BOOK') || status.includes('FULLY PAID') || status.includes('PRE-BOOK')) { 
+                        this.showNotif('Taken', `Booth ${id} is unavailable`, 'fas fa-lock');
+                        return; 
+                    }
+                    if (this.selectedBooths.includes(id)) { 
+                        this.selectedBooths = this.selectedBooths.filter(b => b !== id);
+                    } else { 
+                        if (this.selectedBooths.length >= 2) return this.showNotif('Limit', 'Max 2 booths', 'fas fa-exclamation');
+                        this.selectedBooths.push(id); 
+                    }
+                    this.refreshVisuals();
+                },
+
+                showTooltip(e, id) {
+                    const info = this.getBoothInfo(id) || {};
+                    const price = this.getPrice(id);
+                    const displayId = info.id || id;
+                    const category = info.category && info.category !== '-' ? info.category : (price >= 3000 ? 'F&B' : 'Retail');
+                    const status = info.status || 'AVAILABLE';
+                    
+                    this.tooltip.id = id;
+                    this.tooltip.content = `<div class="font-bold text-emerald-300">Booth ${displayId}</div><div class="text-[10px] text-gray-300 mb-1 border-b border-gray-600 pb-1">${category}</div><div class="text-xs text-gray-200">Price: RM ${price > 0 ? price.toLocaleString() : '-'}</div><div class="text-[10px] font-bold mt-1 uppercase ${status==='AVAILABLE'?'text-green-400':'text-red-400'}">${status}</div>`;
+                    this.tooltip.x = e.clientX; this.tooltip.y = e.clientY - 10; this.tooltip.visible = true;
+                },
+                
+                hideTooltip() { this.tooltip.visible = false; },
+                
+                getPrice(id) { 
+                    const info = this.getBoothInfo(id);
+                    if (info) { 
+                        // Clean price function to remove "RM" and ","
+                        const clean = (val) => {
+                            if (!val) return 0;
+                            // Removes anything that isn't a digit, dot or minus sign
+                            const num = parseFloat(String(val).replace(/[^\d.-]/g, ''));
+                            return isNaN(num) ? 0 : num;
+                        };
+
+                        if (info.price) return clean(info.price);
+                        if (info.g) return clean(info.g); 
+                        if (info.h) return clean(info.h); 
+                    } 
+                    return 0;
+                },
+                
+                get totalPrice() { return this.selectedBooths.reduce((t, id) => t + this.getPrice(id), 0); },
+                showNotif(title, msg, icon) { this.notification = { visible: true, title, message: msg, icon }; setTimeout(() => this.notification.visible = false, 3000); },
+                
+                searchBooth() {
+                    let q = this.searchQuery.trim().toUpperCase();
+                    if (!q) return; 
+
+                    const findAndSwitch = (id) => {
+                        const el = document.getElementById(id);
+                        if(el) {
+                            const parentSvg = el.closest('svg');
+                            if(parentSvg) {
+                                const zone = parentSvg.id.replace('-svg', '');
+                                if(zone !== this.currentZone) {
+                                    this.switchZone(zone);
+                                }
+                                setTimeout(() => {
+                                    const freshEl = document.getElementById(id);
+                                    if(freshEl) {
+                                        freshEl.parentNode.appendChild(freshEl);
+                                        freshEl.classList.add('searched');
+                                        setTimeout(() => freshEl.classList.remove('searched'), 3000);
+                                    }
+                                }, 150);
+                                return true;
+                            }
+                        }
+                        return false;
+                    };
+
+                    if (findAndSwitch(q)) return;
+                    if (q.match(/\d+/)) {
+                        if (q.length === 1 && !isNaN(q)) { if (findAndSwitch("0" + q)) return; }
+                        if (q.match(/[A-Z]\d+/)) {
+                            let match = q.match(/([A-Z])(\d+)/);
+                            if (match && match[2].length === 1) { if (findAndSwitch(match[1] + '0' + match[2])) return; }
+                        }
+                    }
+                    if (q.match(/0\d+/)) { if (findAndSwitch(q.replace('0', ''))) return; }
+
+                    this.showNotif('Not Found', 'Booth not found', 'fas fa-search');
+                },
+                
+                generateSummary() { this.modals.booking = false; this.modals.summary = true; },
+                
+                handleBookingAction(type) {
+                    const refId = 'PEN' + Math.floor(100000 + Math.random() * 900000);
+                    const payload = { ...this.form, selectedBooths: this.selectedBooths, totalPrice: this.totalPrice, bookingId: refId };
+                    fetch(SCRIPT_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify(payload),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+
+                    let msg = `*ABSOLUT BAZAAR PENANG 2026*\n`;
+                    msg += `PICCA, PENANG\n`;
+                    msg += `6-8 MARCH 2026\n\n`;
+                    msg += `Booking ID: ${refId}\n`;
+                    msg += `Company: ${this.form.companyName}\n`;
+                    msg += `Brand: ${this.form.brandName}\n`;
+                    msg += `Wakil syarikat (PIC): ${this.form.personInCharge}\n`;
+                    msg += `Phone: ${this.form.phoneNumber}\n`;
+                    msg += `Email: ${this.form.email}\n`;
+                    msg += `Billing Address: ${this.form.billingAddress}\n\n`;
+                    msg += `Selected Booths: ${this.selectedBooths.join(', ')}\n`;
+                    msg += `Total Amount: RM ${this.totalPrice.toLocaleString()}\n\n`; 
+                    msg += `Items to Sell: ${this.form.sellingItems}\n\n`;
+                    msg += `Please confirm this booking and for us to provide payment instructions\n\n`;
+                    msg += `Please use this remark: ABPG${this.selectedBooths.join('')}\n\n`;
+                    msg += `Thank you!`;
+
+                    if (type === 'absolut') {
+                        window.open(`https://wa.me/60176831247?text=${encodeURIComponent(msg)}`, '_blank');
+                    } else if (type === 'copy') {
+                        navigator.clipboard.writeText(msg).then(() => {
+                            this.showNotif('Copied', 'Booking summary copied to clipboard', 'fas fa-copy');
+                        });
+                    }
+
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                    this.modals.summary = false;
+                    this.modals.success = true;
+                    this.selectedBooths = [];
+                    this.refreshVisuals();
+                },
+                
+                startDrag(e) { if(e.target.closest('.booth')) return;
+                    this.isDragging=true; this.startX=(e.touches?e.touches[0].clientX:e.clientX)-this.panX; this.startY=(e.touches?e.touches[0].clientY:e.clientY)-this.panY; 
+                    const move = (ev) => { if(!this.isDragging)return; ev.preventDefault(); const x=ev.touches?ev.touches[0].clientX:ev.clientX; const y=ev.touches?ev.touches[0].clientY:ev.clientY; this.panX=x-this.startX; this.panY=y-this.startY; this.updateTransform(); };
+                    const end = () => { this.isDragging=false; window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', end); window.removeEventListener('touchmove', move); window.removeEventListener('touchend', end); }; 
+                    window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+                    window.addEventListener('touchmove', move); window.addEventListener('touchend', end); 
+                },
+                zoomIn(){ this.zoomLevel=Math.min(this.zoomLevel*1.2, 4);
+                this.updateTransform(); }, 
+                zoomOut(){ this.zoomLevel=Math.max(this.zoomLevel/1.2, 0.5);
+                this.updateTransform(); }, 
+                resetZoom(){ this.zoomLevel=1;
+                this.panX=0; this.panY=0; this.updateTransform(); },
+                updateTransform(){ if(this.$refs.floorplanContainer) this.$refs.floorplanContainer.style.transform=`translate(${this.panX}px, ${this.panY}px) scale(${this.zoomLevel})`;
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

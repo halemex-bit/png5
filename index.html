@@ -15,7 +15,6 @@
 
     <style>
         :root {
-            /* TEMA HIJAU PREMIUM */
             --bg-color: #ecfdf5; 
             --text-main: #064e3b; 
             --text-primary: #047857; 
@@ -34,7 +33,7 @@
             --col-sold-stroke: #db2777; 
         }
 
-        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; touch-action: none; /* Penting untuk mobile app feel */ }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
         
         .neu-panel { background: var(--bg-color); border-radius: 20px; box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light); border: 1px solid rgba(255,255,255,0.4); }
         .neu-pressed { background: var(--bg-color); box-shadow: inset 6px 6px 10px var(--shadow-dark), inset -6px -6px 10px var(--shadow-light); border-radius: 15px; }
@@ -56,7 +55,7 @@
         /* Highlight when Available */
         .booth.status-available:hover { stroke: #059669 !important; stroke-width: 2px !important; z-index: 100; }
         
-        /* DIMMED STATE (FILTER ON) - SOLD BOOTHS BECOME TRANSPARENT */
+        /* DIMMED STATE (FILTER ON) */
         .booth.dimmed { 
             fill: transparent !important; 
             stroke: rgba(0,0,0,0.1) !important; 
@@ -210,6 +209,7 @@
                  @touchmove="handleTouchMove" 
                  @touchend="handleTouchEnd"
                  @mousedown="startDrag"
+                 @click="handleMapClick"
                  class="w-full h-full origin-top-left cursor-move" 
                  style="transform-origin: 0 0;">
 
@@ -722,8 +722,10 @@
                     const container = this.$refs.floorplanContainer;
                     container.querySelectorAll('.booth').forEach(el => {
                         const id = el.id;
+                        // REMOVE ONCLICK to prevent double fire
+                        el.onclick = null; 
+                        
                         el.onmouseenter = (e) => this.showTooltip(e, id); el.onmouseleave = () => this.hideTooltip();
-                        el.onclick = () => this.handleBoothClick(id);
                         
                         el.classList.remove('status-sold', 'status-available', 'selected', 'dimmed', 'price-4000', 'price-4500', 'price-2500', 'price-3000');
                         
@@ -874,6 +876,17 @@
                     this.modals.summary = false; this.modals.success = true; this.selectedBooths = []; this.refreshVisuals();
                 },
 
+                // NEW: MOUSE CLICK HANDLER (Separated from Touch)
+                handleMapClick(e) {
+                    // Only process click if not dragging
+                    if (!this.isDragging) {
+                        const booth = e.target.closest('.booth');
+                        if (booth) {
+                            this.handleBoothClick(booth.id);
+                        }
+                    }
+                },
+
                 // TOUCH LOGIC FIX
                 handleTouchStart(e) {
                     if (e.touches.length === 1) {
@@ -922,12 +935,12 @@
                     if (e.touches.length === 0) { // All fingers lifted
                         if (!this.isDragging) {
                             // It was a TAP!
-                            // Find element at the release point (using last known coordinates)
                             const touch = e.changedTouches[0];
                             const target = document.elementFromPoint(touch.clientX, touch.clientY);
                             const booth = target ? target.closest('.booth') : null;
                             
                             if (booth) {
+                                e.preventDefault(); // STOP GHOST CLICKS
                                 this.handleBoothClick(booth.id);
                             }
                         }
@@ -952,6 +965,8 @@
                         this.updateTransform(); 
                     };
                     const end = () => { 
+                        // Small delay to prevent drag release triggering click
+                        setTimeout(() => { this.isDragging=false; }, 50);
                         window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', end); 
                     }; 
                     window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);

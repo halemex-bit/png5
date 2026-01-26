@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Penang 2026 ABGR Booking</title>
     <link rel="icon" type="image/png" href="https://i.imgur.com/bEd62zX.png">
 
@@ -16,41 +16,33 @@
     <style>
         :root {
             /* TEMA HIJAU PREMIUM */
-            --bg-color: #ecfdf5; /* Emerald 50 */
-            --text-main: #064e3b; /* Emerald 900 */
-            --text-primary: #047857; /* Emerald 700 */
-            --text-accent: #10b981; /* Emerald 500 */
+            --bg-color: #ecfdf5; 
+            --text-main: #064e3b; 
+            --text-primary: #047857; 
+            --text-accent: #10b981; 
             --shadow-light: #ffffff; 
-            --shadow-dark: #a7f3d0; /* Emerald 200 shadow */
+            --shadow-dark: #a7f3d0;
             
-            /* PRICES - Colors match Legend */
+            /* PRICES */
             --col-retail-inter: #94a3b8; /* Slate (RM4000) */
             --col-retail-corner: #fbbf24; /* Yellow (RM4500) */
             --col-fnb-out-inter: #c084fc; /* Purple (RM2500) */
             --col-fnb-out-corner: #22d3ee; /* Cyan (RM3000) */
 
-            /* STATUS - SOLD JADI PINK */
-            --col-sold-fill: #f472b6; /* Pink 400 */
-            --col-sold-stroke: #db2777; /* Pink 600 */
+            /* STATUS - SOLD DEFAULT PINK */
+            --col-sold-fill: #f472b6; 
+            --col-sold-stroke: #db2777; 
         }
 
-        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden;
-            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23047857' stroke='white' stroke-width='2'%3E%3Cpath d='M2 2l7.5 19.5 3.5-8.5 8.5-3.5z'/%3E%3C/svg%3E"), auto !important;
-        }
-        button, .booth, a, input, select, textarea { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23059669' stroke='white' stroke-width='2'%3E%3Cpath d='M10 2l-1.5 6h-5.5l4.5 4-2 6 5.5-3.5 5.5 3.5-2-6 4.5-4h-5.5z'/%3E%3C/svg%3E"), pointer !important;
-        }
-
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; touch-action: pan-x pan-y; }
+        
         .neu-panel { background: var(--bg-color); border-radius: 20px; box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light); border: 1px solid rgba(255,255,255,0.4); }
         .neu-pressed { background: var(--bg-color); box-shadow: inset 6px 6px 10px var(--shadow-dark), inset -6px -6px 10px var(--shadow-light); border-radius: 15px; }
-        
-        /* Butang Hijau */
         .neu-btn { background: var(--bg-color); border: none; border-radius: 12px; color: var(--text-primary); box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); transition: all 0.2s ease; }
         .neu-btn:hover { transform: translateY(-2px); }
         .neu-btn.active { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); color: #065f46; background: #d1fae5; transform: translateY(0); }
-        
         .neu-btn-primary { background: #059669; color: white; border-radius: 12px; border: none; box-shadow: 6px 6px 12px #6ee7b7, -6px -6px 12px #ffffff; transition: all 0.2s ease; }
         .neu-btn-primary:hover { transform: translateY(-2px); background: #047857; }
-        
         .neu-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-color); color: var(--text-primary); box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); }
         .neu-input { background: var(--bg-color); border: none; border-radius: 8px; box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); padding: 12px; outline: none; width: 100%; color: #064e3b; }
         .neu-modal-overlay { background: rgba(6, 78, 59, 0.4); backdrop-filter: blur(8px); }
@@ -60,17 +52,34 @@
         .booth { transition: fill 0.3s ease, stroke 0.3s ease, opacity 0.3s ease; cursor: pointer; stroke: #000; stroke-width: 0.5px; fill: #FFFFFF; }
         .booth rect { fill: inherit; pointer-events: all; }
         .booth text { font-family: Arial, sans-serif; font-size: 5px; fill: #000; pointer-events: none; text-anchor: middle; dominant-baseline: middle; font-weight: normal; }
-        .booth:hover { stroke: #059669 !important; stroke-width: 2px !important; z-index: 100; }
-        .booth.dimmed { opacity: 0.1 !important; filter: grayscale(100%); pointer-events: none; }
+        
+        /* Highlight when Available */
+        .booth.status-available:hover { stroke: #059669 !important; stroke-width: 2px !important; z-index: 100; }
+        
+        /* DIMMED STATE (FOR FILTER) - TRANSPARENT */
+        .booth.dimmed { 
+            fill: transparent !important; 
+            stroke: rgba(0,0,0,0.05) !important; 
+            stroke-width: 0.5px !important;
+            opacity: 0.3 !important;
+            pointer-events: none; 
+        }
 
-        /* UPDATED Price Color Classes */
-        .booth.price-4000 { fill: var(--col-retail-inter) !important; } /* Retail Inter (Gray) */
-        .booth.price-4500 { fill: var(--col-retail-corner) !important; } /* Retail Corner (Yellow) */
-        .booth.price-2500 { fill: var(--col-fnb-out-inter) !important; } /* Outdoor Inter (Purple) */
-        .booth.price-3000 { fill: var(--col-fnb-out-corner) !important; } /* Outdoor Corner (Cyan) */
+        /* PRICE COLORS */
+        .booth.price-4000 { fill: var(--col-retail-inter) !important; }
+        .booth.price-4500 { fill: var(--col-retail-corner) !important; }
+        .booth.price-2500 { fill: var(--col-fnb-out-inter) !important; }
+        .booth.price-3000 { fill: var(--col-fnb-out-corner) !important; }
 
-        /* SOLD - PINK */
-        .booth.status-sold, .booth.status-booked, .booth.status-fullypaid { fill: var(--col-sold-fill) !important; stroke: var(--col-sold-stroke) !important; stroke-width: 1px !important; stroke-dasharray: 4,2; opacity: 1 !important; cursor: not-allowed; }
+        /* SOLD STATE */
+        .booth.status-sold, .booth.status-booked, .booth.status-fullypaid { 
+            fill: var(--col-sold-fill) !important; 
+            stroke: var(--col-sold-stroke) !important; 
+            stroke-width: 1px !important; 
+            stroke-dasharray: 4,2; 
+            opacity: 1 !important; 
+            cursor: not-allowed; 
+        }
         
         .booth.selected { fill: #059669 !important; stroke: white !important; stroke-width: 2px !important; filter: drop-shadow(0 0 8px rgba(5, 150, 105, 0.6)); animation: selectedGlow 2s ease-in-out infinite; }
         .booth.searched { stroke: #059669 !important; stroke-width: 6px !important; animation: searchPulse 0.8s infinite alternate !important; z-index: 200 !important; }
@@ -113,17 +122,6 @@
                 <div class="flex items-center gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">2</div><div class="text-sm text-gray-700" x-html="t('step2')"></div></div>
                 <div class="flex items-center gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">3</div><div class="text-sm text-gray-700" x-html="t('step3')"></div></div>
                 <div class="flex items-start gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">4</div><div class="text-sm text-gray-700 pt-2" x-html="t('step4')"></div></div>
-                <div class="flex items-start gap-4" x-data="{ open: false }">
-                    <div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">5</div>
-                    <div class="w-full pt-2">
-                        <button @click="open = !open" class="flex items-center justify-between w-full text-sm font-bold text-gray-800 hover:text-emerald-600 transition"><span x-text="t('schedule')"></span><i :class="open ? 'fa-chevron-up' : 'fa-chevron-down'" class="fas text-xs"></i></button>
-                        <div x-show="open" x-collapse class="mt-2 text-xs text-gray-600 space-y-2 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
-                            <div><span class="font-bold text-emerald-700">📆 6 March:</span> 12pm - 2am</div>
-                            <div><span class="font-bold text-emerald-700">📆 7 March:</span> 10am - 2am</div>
-                            <div><span class="font-bold text-emerald-700">📆 8 March:</span> 10am - 10pm</div>
-                        </div>
-                    </div>
-                </div>
             </div>
             <button @click="modals.welcome = false" class="w-full py-4 neu-btn-primary font-bold text-lg shadow-lg" x-text="t('understand')"></button>
         </div>
@@ -186,7 +184,7 @@
             </div>
         </div>
 
-        <div class="neu-panel p-2 relative h-[450px] md:h-[600px] overflow-hidden mb-8 bg-white">
+        <div class="neu-panel p-2 relative h-[450px] md:h-[600px] overflow-hidden mb-8 bg-white" style="touch-action: none;">
             <div x-show="loading" class="absolute top-2 right-2 z-30 bg-white/80 px-3 py-1 rounded-full text-xs font-bold text-emerald-500 shadow flex items-center gap-2"><i class="fas fa-circle-notch fa-spin"></i> <span x-text="t('syncing')"></span></div>
             <div class="absolute top-4 left-4 z-20 pointer-events-none"><span class="neu-pressed px-3 py-1 text-xs font-bold text-emerald-500 uppercase tracking-wider" x-text="t(currentZone)"></span></div>
             <div class="absolute top-4 right-4 z-20 flex flex-col gap-3">
@@ -196,7 +194,13 @@
                 <button @click="toggleFilter" :class="filterAvailable ? 'bg-green-100 text-green-600 border border-green-300' : ''" class="neu-circle" title="Filter Available"><i class="fas fa-filter"></i></button>
             </div>
 
-            <div x-ref="floorplanContainer" @mousedown="startDrag" @touchstart="startDrag" class="w-full h-full origin-top-left cursor-move touch-none" style="transform-origin: 0 0; touch-action: none;">
+            <div x-ref="floorplanContainer" 
+                 @touchstart="handleTouchStart" 
+                 @touchmove="handleTouchMove" 
+                 @touchend="handleTouchEnd"
+                 @mousedown="startDrag"
+                 class="w-full h-full origin-top-left cursor-move" 
+                 style="transform-origin: 0 0;">
 
                 <svg x-show="currentZone === 'indoor'" id="indoor-svg" viewBox="0 0 952.22 535.64" xmlns="http://www.w3.org/2000/svg">
                     <image href="https://i.imgur.com/ypQT5W4.jpeg" x="0" y="0" width="952.22" height="535.64" opacity="0.6"/>
@@ -204,7 +208,7 @@
                     
                     <g id="1" class="booth"><rect x="181.9" y="248.5" width="10.85" height="10.85"/><text x="187.32" y="253.92">1</text></g>
                     <g id="2" class="booth"><rect x="193.25" y="248.5" width="10.85" height="10.85"/><text x="198.67" y="253.92">2</text></g>
-		<g id="3" class="booth"><rect x="204.59" y="248.5" width="10.85" height="10.85"/><text x="210.01" y="253.92">3</text></g>
+                    <g id="3" class="booth"><rect x="204.59" y="248.5" width="10.85" height="10.85"/><text x="210.01" y="253.92">3</text></g>
                     <g id="4" class="booth"><rect x="215.94" y="248.5" width="10.85" height="10.85"/><text x="221.36" y="253.92">4</text></g>
                     <g id="5" class="booth"><rect x="227.29" y="248.5" width="10.85" height="10.85"/><text x="232.71" y="253.92">5</text></g>
                     <g id="6" class="booth"><rect x="238.63" y="248.5" width="10.85" height="10.85"/><text x="244.05" y="253.92">6</text></g>
@@ -553,7 +557,6 @@
                         step1: "<strong>Zoom & Gerakkan</strong> peta untuk lihat booth.",
                         step2: "Klik <strong>Booth Kosong</strong> untuk pilih (Max 2).",
                         step3: "<strong>Bayaran Penuh</strong> diperlukan.",
-                        // TEXT REPLACEMENT (MS)
                         step4: "Semua vendor F&B mesti mempunyai <strong>Sijil Pengendalian Makanan dan Suntikan Typhoid</strong>.",
                         schedule: "Jadual Acara (Tentatif)",
                         understand: "Saya Faham",
@@ -590,7 +593,6 @@
                         step1: "<strong>Zoom & Pan</strong> to explore the floorplan.",
                         step2: "Click <strong>Available Booths</strong> to select (Max 2).",
                         step3: "<strong>Full Payment</strong> is required.",
-                        // TEXT REPLACEMENT (EN)
                         step4: "All F&B vendors must possess a <strong>Food Handling Certificate & Typhoid Injection</strong>.",
                         schedule: "Event Schedule (Tentative)",
                         understand: "I Understand",
@@ -633,13 +635,14 @@
                 searchQuery: '',
                 form: { companyName: '', brandName: '', personInCharge: '', phoneNumber: '', email: '', socialMedia: '', sellingItems: '', billingAddress: '' },
                 zoomLevel: 1, panX: 0, panY: 0, isDragging: false, startX: 0, startY: 0,
+                // NEW: Variables for Pinch Zoom
+                touchStartDist: 0, lastZoom: 1,
 
                 t(key) { return this.translations[this.lang][key] || key; },
 
                 async initSystem() { 
                     this.fetchBooths();
                     setTimeout(() => this.fetchBooths(true, 'outdoor'), 500);
-                    // Initial load logic for mobile indoor zoom
                     if (window.innerWidth < 768) { this.zoomLevel = 1.3; this.panX = -100; this.panY = -50; }
                     this.updateTransform();
                     setInterval(() => this.backgroundSync(), 15000);
@@ -648,30 +651,16 @@
                 switchZone(zone) { 
                     this.currentZone = zone;
                     this.selectedBooths = []; 
-                    
-                    // DEFAULT VIEW LOGIC (UPDATED WITH PC CHECK)
                     if (zone === 'outdoor') {
                         if (window.innerWidth < 768) {
-                            // Mobile View (Zoomed)
-                            this.zoomLevel = 2.2;
-                            this.panX = -450;
-                            this.panY = -250;
-                        } else {
-                            // PC View (Full/Reset)
-                            this.resetZoom();
-                        }
+                            this.zoomLevel = 2.2; this.panX = -450; this.panY = -250;
+                        } else { this.resetZoom(); }
                     } else {
-                        // Indoor Logic
                         if (window.innerWidth < 768) {
-                            this.zoomLevel = 1.3; 
-                            this.panX = -100; 
-                            this.panY = -50;
-                        } else {
-                            this.resetZoom();
-                        }
+                            this.zoomLevel = 1.3; this.panX = -100; this.panY = -50;
+                        } else { this.resetZoom(); }
                     }
                     this.updateTransform();
-
                     if (this.dataCache[zone]) {
                         this.boothData = this.dataCache[zone];
                         this.loading = false;
@@ -735,19 +724,19 @@
                         const status = info.status ? info.status.toUpperCase() : 'AVAILABLE';
                         const price = this.getPrice(id);
                         
-                        if (this.filterAvailable && (status.includes('SOLD') || status.includes('BOOK') || status.includes('FULLY PAID'))) {
-                            el.classList.add('dimmed');
-                        }
-
                         if (status.includes('SOLD') || status.includes('BOOK') || status.includes('FULLY PAID') || status.includes('PRE-BOOK')) { 
-                            el.classList.add('status-sold');
+                            // IF Filter is ON, dim the SOLD booths
+                            if (this.filterAvailable) {
+                                el.classList.add('dimmed');
+                            } else {
+                                el.classList.add('status-sold');
+                            }
                         } else {
                             el.classList.add('status-available');
-                            // MAPPING PRICE TO VISUALS
-                            if (price == 4000) el.classList.add('price-4000'); // Indoor Inter
-                            else if (price == 4500) el.classList.add('price-4500'); // Indoor Corner
-                            else if (price == 2500) el.classList.add('price-2500'); // Outdoor Inter (Now Purple)
-                            else if (price == 3000) el.classList.add('price-3000'); // Outdoor Corner (Now Cyan)
+                            if (price == 4000) el.classList.add('price-4000'); 
+                            else if (price == 4500) el.classList.add('price-4500'); 
+                            else if (price == 2500) el.classList.add('price-2500'); 
+                            else if (price == 3000) el.classList.add('price-3000'); 
                         }
                     });
                 },
@@ -787,14 +776,11 @@
                 getPrice(id) { 
                     const info = this.getBoothInfo(id);
                     if (info) { 
-                        // Clean price function to remove "RM" and ","
                         const clean = (val) => {
                             if (!val) return 0;
-                            // Removes anything that isn't a digit, dot or minus sign
                             const num = parseFloat(String(val).replace(/[^\d.-]/g, ''));
                             return isNaN(num) ? 0 : num;
                         };
-
                         if (info.price) return clean(info.price);
                         if (info.g) return clean(info.g); 
                         if (info.h) return clean(info.h); 
@@ -808,16 +794,13 @@
                 searchBooth() {
                     let q = this.searchQuery.trim().toUpperCase();
                     if (!q) return; 
-
                     const findAndSwitch = (id) => {
                         const el = document.getElementById(id);
                         if(el) {
                             const parentSvg = el.closest('svg');
                             if(parentSvg) {
                                 const zone = parentSvg.id.replace('-svg', '');
-                                if(zone !== this.currentZone) {
-                                    this.switchZone(zone);
-                                }
+                                if(zone !== this.currentZone) { this.switchZone(zone); }
                                 setTimeout(() => {
                                     const freshEl = document.getElementById(id);
                                     if(freshEl) {
@@ -831,7 +814,6 @@
                         }
                         return false;
                     };
-
                     if (findAndSwitch(q)) return;
                     if (q.match(/\d+/)) {
                         if (q.length === 1 && !isNaN(q)) { if (findAndSwitch("0" + q)) return; }
@@ -841,7 +823,6 @@
                         }
                     }
                     if (q.match(/0\d+/)) { if (findAndSwitch(q.replace('0', ''))) return; }
-
                     this.showNotif('Not Found', 'Booth not found', 'fas fa-search');
                 },
                 
@@ -850,12 +831,7 @@
                 handleBookingAction(type) {
                     const refId = 'PEN' + Math.floor(100000 + Math.random() * 900000);
                     const payload = { ...this.form, selectedBooths: this.selectedBooths, totalPrice: this.totalPrice, bookingId: refId };
-                    fetch(SCRIPT_URL, { 
-                        method: 'POST', 
-                        body: JSON.stringify(payload),
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                    });
-
+                    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
                     let msg = `*ABSOLUT BAZAAR PENANG 2026*\n`;
                     msg += `PICCA, PENANG\n`;
                     msg += `6-8 MARCH 2026\n\n`;
@@ -873,26 +849,49 @@
                     msg += `Please use this remark: ABPG${this.selectedBooths.join('')}\n\n`;
                     msg += `Thank you!`;
 
-                    if (type === 'absolut') {
-                        window.open(`https://wa.me/60176831247?text=${encodeURIComponent(msg)}`, '_blank');
-                    } else if (type === 'copy') {
-                        navigator.clipboard.writeText(msg).then(() => {
-                            this.showNotif('Copied', 'Booking summary copied to clipboard', 'fas fa-copy');
-                        });
-                    }
-
+                    if (type === 'absolut') { window.open(`https://wa.me/60176831247?text=${encodeURIComponent(msg)}`, '_blank'); } 
+                    else if (type === 'copy') { navigator.clipboard.writeText(msg).then(() => { this.showNotif('Copied', 'Booking summary copied to clipboard', 'fas fa-copy'); }); }
                     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                    this.modals.summary = false;
-                    this.modals.success = true;
-                    this.selectedBooths = [];
-                    this.refreshVisuals();
+                    this.modals.summary = false; this.modals.success = true; this.selectedBooths = []; this.refreshVisuals();
+                },
+
+                // NEW: PINCH TO ZOOM HANDLERS
+                handleTouchStart(e) {
+                    if (e.touches.length === 2) {
+                        e.preventDefault(); 
+                        this.isDragging = false; 
+                        // Calc distance between 2 fingers
+                        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                        this.touchStartDist = dist;
+                        this.lastZoom = this.zoomLevel;
+                    }
+                },
+
+                handleTouchMove(e) {
+                    if (e.touches.length === 2) {
+                        e.preventDefault();
+                        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                        if (this.touchStartDist > 0) {
+                            const delta = dist / this.touchStartDist;
+                            const newZoom = this.lastZoom * delta;
+                            if (newZoom > 0.5 && newZoom < 5) {
+                                this.zoomLevel = newZoom;
+                                this.updateTransform();
+                            }
+                        }
+                    }
+                },
+
+                handleTouchEnd(e) {
+                    if (e.touches.length < 2) { this.touchStartDist = 0; }
                 },
                 
                 startDrag(e) { 
-                    // FIX 1: Prevent Default on TouchStart to stop scrolling
-                    if (e.type === 'touchstart') { e.preventDefault(); }
-                    
+                    if(e.type === 'touchstart' && e.touches.length > 1) return; // Ignore if pinching
                     if(e.target.closest('.booth')) return;
+                    // Allow normal touch scrolling if not on map
+                    if(e.type !== 'touchstart') e.preventDefault();
+                    
                     this.isDragging=true; 
                     this.startX=(e.touches?e.touches[0].clientX:e.clientX)-this.panX; 
                     this.startY=(e.touches?e.touches[0].clientY:e.clientY)-this.panY; 
@@ -906,28 +905,18 @@
                         this.panY=y-this.startY; 
                         this.updateTransform(); 
                     };
-                    
                     const end = () => { 
                         this.isDragging=false; 
-                        window.removeEventListener('mousemove', move); 
-                        window.removeEventListener('mouseup', end); 
-                        window.removeEventListener('touchmove', move); 
-                        window.removeEventListener('touchend', end); 
+                        window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', end); 
+                        window.removeEventListener('touchmove', move); window.removeEventListener('touchend', end); 
                     }; 
-                    
-                    window.addEventListener('mousemove', move); 
-                    window.addEventListener('mouseup', end);
-                    window.addEventListener('touchmove', move, { passive: false }); // Added passive:false for better touch handling
-                    window.addEventListener('touchend', end); 
+                    window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+                    window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('touchend', end); 
                 },
-                zoomIn(){ this.zoomLevel=Math.min(this.zoomLevel*1.2, 4);
-                this.updateTransform(); }, 
-                zoomOut(){ this.zoomLevel=Math.max(this.zoomLevel/1.2, 0.5);
-                this.updateTransform(); }, 
-                resetZoom(){ this.zoomLevel=1;
-                this.panX=0; this.panY=0; this.updateTransform(); },
-                updateTransform(){ if(this.$refs.floorplanContainer) this.$refs.floorplanContainer.style.transform=`translate(${this.panX}px, ${this.panY}px) scale(${this.zoomLevel})`;
-                }
+                zoomIn(){ this.zoomLevel=Math.min(this.zoomLevel*1.2, 4); this.updateTransform(); }, 
+                zoomOut(){ this.zoomLevel=Math.max(this.zoomLevel/1.2, 0.5); this.updateTransform(); }, 
+                resetZoom(){ this.zoomLevel=1; this.panX=0; this.panY=0; this.updateTransform(); },
+                updateTransform(){ if(this.$refs.floorplanContainer) this.$refs.floorplanContainer.style.transform=`translate(${this.panX}px, ${this.panY}px) scale(${this.zoomLevel})`; }
             }));
         });
     </script>

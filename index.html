@@ -15,6 +15,7 @@
 
     <style>
         :root {
+            /* TEMA HIJAU PREMIUM */
             --bg-color: #ecfdf5; 
             --text-main: #064e3b; 
             --text-primary: #047857; 
@@ -33,7 +34,7 @@
             --col-sold-stroke: #db2777; 
         }
 
-        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; touch-action: pan-x pan-y; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; touch-action: none; /* Penting untuk mobile app feel */ }
         
         .neu-panel { background: var(--bg-color); border-radius: 20px; box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light); border: 1px solid rgba(255,255,255,0.4); }
         .neu-pressed { background: var(--bg-color); box-shadow: inset 6px 6px 10px var(--shadow-dark), inset -6px -6px 10px var(--shadow-light); border-radius: 15px; }
@@ -121,7 +122,6 @@
                 <div class="flex items-center gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">2</div><div class="text-sm text-gray-700" x-html="t('step2')"></div></div>
                 <div class="flex items-center gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">3</div><div class="text-sm text-gray-700" x-html="t('step3')"></div></div>
                 <div class="flex items-start gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">4</div><div class="text-sm text-gray-700 pt-2" x-html="t('step4')"></div></div>
-                
                 <div class="flex items-start gap-4" x-data="{ open: false }">
                     <div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">5</div>
                     <div class="w-full pt-2">
@@ -647,7 +647,7 @@
                 form: { companyName: '', brandName: '', personInCharge: '', phoneNumber: '', email: '', socialMedia: '', sellingItems: '', billingAddress: '' },
                 zoomLevel: 1, panX: 0, panY: 0, isDragging: false, startX: 0, startY: 0,
                 // Variables for Pinch Zoom
-                touchStartDist: 0, lastZoom: 1,
+                touchStartDist: 0, lastZoom: 1, startClickX: 0, startClickY: 0,
 
                 t(key) { return this.translations[this.lang][key] || key; },
 
@@ -776,8 +776,17 @@
                     const category = info.category && info.category !== '-' ? info.category : (price >= 3000 ? 'F&B' : 'Retail');
                     const status = info.status || 'AVAILABLE';
                     
+                    // NEW: Size Check Logic
+                    let sizeHtml = '';
+                    if (this.currentZone === 'indoor') {
+                        const numId = parseInt(id);
+                        if (!isNaN(numId) && numId >= 1 && numId <= 190) {
+                            sizeHtml = '<div class="text-xs text-gray-300 mt-1 border-t border-gray-600 pt-1">Size: 3m x 3m</div>';
+                        }
+                    }
+
                     this.tooltip.id = id;
-                    this.tooltip.content = `<div class="font-bold text-emerald-300">Booth ${displayId}</div><div class="text-[10px] text-gray-300 mb-1 border-b border-gray-600 pb-1">${category}</div><div class="text-xs text-gray-200">Price: RM ${price > 0 ? price.toLocaleString() : '-'}</div><div class="text-[10px] font-bold mt-1 uppercase ${status==='AVAILABLE'?'text-green-400':'text-red-400'}">${status}</div>`;
+                    this.tooltip.content = `<div class="font-bold text-emerald-300">Booth ${displayId}</div><div class="text-[10px] text-gray-300 mb-1 border-b border-gray-600 pb-1">${category}</div><div class="text-xs text-gray-200">Price: RM ${price > 0 ? price.toLocaleString() : '-'}</div><div class="text-[10px] font-bold mt-1 uppercase ${status==='AVAILABLE'?'text-green-400':'text-red-400'}">${status}</div>${sizeHtml}`;
                     this.tooltip.x = e.clientX; this.tooltip.y = e.clientY - 10; this.tooltip.visible = true;
                 },
                 
@@ -865,14 +874,17 @@
                     this.modals.summary = false; this.modals.success = true; this.selectedBooths = []; this.refreshVisuals();
                 },
 
-                // NEW: PINCH TO ZOOM HANDLERS
+                // TOUCH LOGIC FIX
                 handleTouchStart(e) {
-                    e.preventDefault(); 
                     if (e.touches.length === 1) {
-                        this.isDragging = true;
+                        // Start Drag/Pan or Tap
+                        this.isDragging = false; // Assume tap initially
+                        this.startClickX = e.touches[0].clientX;
+                        this.startClickY = e.touches[0].clientY;
                         this.startX = e.touches[0].clientX - this.panX;
                         this.startY = e.touches[0].clientY - this.panY;
                     } else if (e.touches.length === 2) {
+                        e.preventDefault();
                         this.isDragging = false; 
                         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                         this.touchStartDist = dist;
@@ -882,12 +894,17 @@
 
                 handleTouchMove(e) {
                     e.preventDefault();
-                    if (e.touches.length === 1 && this.isDragging) {
+                    if (e.touches.length === 1) {
                         const x = e.touches[0].clientX;
                         const y = e.touches[0].clientY;
-                        this.panX = x - this.startX;
-                        this.panY = y - this.startY;
-                        this.updateTransform();
+                        
+                        // Check if moved significantly to consider as drag
+                        if (Math.abs(x - this.startClickX) > 5 || Math.abs(y - this.startClickY) > 5) {
+                            this.isDragging = true;
+                            this.panX = x - this.startX;
+                            this.panY = y - this.startY;
+                            this.updateTransform();
+                        }
                     } else if (e.touches.length === 2) {
                         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                         if (this.touchStartDist > 0) {
@@ -902,30 +919,39 @@
                 },
 
                 handleTouchEnd(e) {
-                    if (e.touches.length < 2) { this.touchStartDist = 0; }
-                    if (e.touches.length === 0) { this.isDragging = false; }
+                    if (e.touches.length === 0) { // All fingers lifted
+                        if (!this.isDragging) {
+                            // It was a TAP!
+                            // Find element at the release point (using last known coordinates)
+                            const touch = e.changedTouches[0];
+                            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                            const booth = target ? target.closest('.booth') : null;
+                            
+                            if (booth) {
+                                this.handleBoothClick(booth.id);
+                            }
+                        }
+                        this.isDragging = false;
+                        this.touchStartDist = 0;
+                    }
                 },
                 
                 startDrag(e) { 
-                    if(e.type === 'touchstart') return; // Handled by handleTouchStart
+                    if(e.type === 'touchstart') return; // Handled above
                     if(e.target.closest('.booth')) return;
                     e.preventDefault();
                     
                     this.isDragging=true; 
-                    this.startX=(e.touches?e.touches[0].clientX:e.clientX)-this.panX; 
-                    this.startY=(e.touches?e.touches[0].clientY:e.clientY)-this.panY; 
+                    this.startX=e.clientX-this.panX; 
+                    this.startY=e.clientY-this.panY; 
                     
                     const move = (ev) => { 
-                        if(!this.isDragging)return; 
                         ev.preventDefault(); 
-                        const x=ev.touches?ev.touches[0].clientX:ev.clientX; 
-                        const y=ev.touches?ev.touches[0].clientY:ev.clientY; 
-                        this.panX=x-this.startX; 
-                        this.panY=y-this.startY; 
+                        this.panX=ev.clientX-this.startX; 
+                        this.panY=ev.clientY-this.startY; 
                         this.updateTransform(); 
                     };
                     const end = () => { 
-                        this.isDragging=false; 
                         window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', end); 
                     }; 
                     window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);

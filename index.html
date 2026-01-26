@@ -15,7 +15,6 @@
 
     <style>
         :root {
-            /* TEMA HIJAU PREMIUM */
             --bg-color: #ecfdf5; 
             --text-main: #064e3b; 
             --text-primary: #047857; 
@@ -29,7 +28,7 @@
             --col-fnb-out-inter: #c084fc; /* Purple (RM2500) */
             --col-fnb-out-corner: #22d3ee; /* Cyan (RM3000) */
 
-            /* STATUS - SOLD DEFAULT PINK */
+            /* STATUS */
             --col-sold-fill: #f472b6; 
             --col-sold-stroke: #db2777; 
         }
@@ -56,16 +55,16 @@
         /* Highlight when Available */
         .booth.status-available:hover { stroke: #059669 !important; stroke-width: 2px !important; z-index: 100; }
         
-        /* DIMMED STATE (FOR FILTER) - TRANSPARENT */
+        /* DIMMED STATE (FILTER ON) - SOLD BOOTHS BECOME TRANSPARENT */
         .booth.dimmed { 
             fill: transparent !important; 
-            stroke: rgba(0,0,0,0.05) !important; 
+            stroke: rgba(0,0,0,0.1) !important; 
             stroke-width: 0.5px !important;
-            opacity: 0.3 !important;
+            opacity: 0.4 !important;
             pointer-events: none; 
         }
 
-        /* PRICE COLORS */
+        /* PRICES */
         .booth.price-4000 { fill: var(--col-retail-inter) !important; }
         .booth.price-4500 { fill: var(--col-retail-corner) !important; }
         .booth.price-2500 { fill: var(--col-fnb-out-inter) !important; }
@@ -122,6 +121,18 @@
                 <div class="flex items-center gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">2</div><div class="text-sm text-gray-700" x-html="t('step2')"></div></div>
                 <div class="flex items-center gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">3</div><div class="text-sm text-gray-700" x-html="t('step3')"></div></div>
                 <div class="flex items-start gap-4"><div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">4</div><div class="text-sm text-gray-700 pt-2" x-html="t('step4')"></div></div>
+                
+                <div class="flex items-start gap-4" x-data="{ open: false }">
+                    <div class="neu-circle w-10 h-10 flex-shrink-0 font-bold text-sm">5</div>
+                    <div class="w-full pt-2">
+                        <button @click="open = !open" class="flex items-center justify-between w-full text-sm font-bold text-gray-800 hover:text-emerald-600 transition"><span x-text="t('schedule')"></span><i :class="open ? 'fa-chevron-up' : 'fa-chevron-down'" class="fas text-xs"></i></button>
+                        <div x-show="open" x-collapse class="mt-2 text-xs text-gray-600 space-y-2 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                            <div><span class="font-bold text-emerald-700">📆 6 March:</span> 12pm - 2am</div>
+                            <div><span class="font-bold text-emerald-700">📆 7 March:</span> 10am - 2am</div>
+                            <div><span class="font-bold text-emerald-700">📆 8 March:</span> 10am - 10pm</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <button @click="modals.welcome = false" class="w-full py-4 neu-btn-primary font-bold text-lg shadow-lg" x-text="t('understand')"></button>
         </div>
@@ -423,7 +434,7 @@
                     <image href="https://i.postimg.cc/ryHz30TC/bkg-01-01.jpg" width="965.21" height="842" x="0" y="0" opacity="0.6"/>
                     
                     <g id="C1" class="booth"><rect x="825.98" y="430.54" width="18.66" height="10.97" transform="translate(425.68 -389.82) rotate(44.84)"/><text font-size="4.2" transform="translate(710.1 510.2) rotate(-.16)">C1</text></g>
-                     <g id="C2" class="booth"><rect x="834.2" y="422.27" width="18.66" height="10.97" transform="translate(422.24 -398.02) rotate(44.84)"/><text font-size="4.2" transform="translate(718.32 501.93) rotate(-.16)">C2</text></g>
+                    <g id="C2" class="booth"><rect x="834.2" y="422.27" width="18.66" height="10.97" transform="translate(422.24 -398.02) rotate(44.84)"/><text font-size="4.2" transform="translate(718.32 501.93) rotate(-.16)">C2</text></g>
                     <g id="C3" class="booth"><rect x="842.39" y="414.03" width="18.66" height="10.97" transform="translate(418.82 -406.19) rotate(44.84)"/><text font-size="4.2" transform="translate(726.51 493.69) rotate(-.16)">C3</text></g>
                     <g id="C4" class="booth"><rect x="849.92" y="406.46" width="18.66" height="10.97" transform="translate(415.67 -413.71) rotate(44.84)"/><text font-size="4.2" transform="translate(734.04 486.12) rotate(-.16)">C4</text></g>
                     <g id="C5" class="booth"><rect x="857.97" y="398.36" width="18.66" height="10.97" transform="translate(412.3 -421.74) rotate(44.84)"/><text font-size="4.2" transform="translate(742.09 478.02) rotate(-.16)">C5</text></g>
@@ -635,7 +646,7 @@
                 searchQuery: '',
                 form: { companyName: '', brandName: '', personInCharge: '', phoneNumber: '', email: '', socialMedia: '', sellingItems: '', billingAddress: '' },
                 zoomLevel: 1, panX: 0, panY: 0, isDragging: false, startX: 0, startY: 0,
-                // NEW: Variables for Pinch Zoom
+                // Variables for Pinch Zoom
                 touchStartDist: 0, lastZoom: 1,
 
                 t(key) { return this.translations[this.lang][key] || key; },
@@ -725,7 +736,6 @@
                         const price = this.getPrice(id);
                         
                         if (status.includes('SOLD') || status.includes('BOOK') || status.includes('FULLY PAID') || status.includes('PRE-BOOK')) { 
-                            // IF Filter is ON, dim the SOLD booths
                             if (this.filterAvailable) {
                                 el.classList.add('dimmed');
                             } else {
@@ -857,10 +867,13 @@
 
                 // NEW: PINCH TO ZOOM HANDLERS
                 handleTouchStart(e) {
-                    if (e.touches.length === 2) {
-                        e.preventDefault(); 
+                    e.preventDefault(); 
+                    if (e.touches.length === 1) {
+                        this.isDragging = true;
+                        this.startX = e.touches[0].clientX - this.panX;
+                        this.startY = e.touches[0].clientY - this.panY;
+                    } else if (e.touches.length === 2) {
                         this.isDragging = false; 
-                        // Calc distance between 2 fingers
                         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                         this.touchStartDist = dist;
                         this.lastZoom = this.zoomLevel;
@@ -868,8 +881,14 @@
                 },
 
                 handleTouchMove(e) {
-                    if (e.touches.length === 2) {
-                        e.preventDefault();
+                    e.preventDefault();
+                    if (e.touches.length === 1 && this.isDragging) {
+                        const x = e.touches[0].clientX;
+                        const y = e.touches[0].clientY;
+                        this.panX = x - this.startX;
+                        this.panY = y - this.startY;
+                        this.updateTransform();
+                    } else if (e.touches.length === 2) {
                         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                         if (this.touchStartDist > 0) {
                             const delta = dist / this.touchStartDist;
@@ -884,13 +903,13 @@
 
                 handleTouchEnd(e) {
                     if (e.touches.length < 2) { this.touchStartDist = 0; }
+                    if (e.touches.length === 0) { this.isDragging = false; }
                 },
                 
                 startDrag(e) { 
-                    if(e.type === 'touchstart' && e.touches.length > 1) return; // Ignore if pinching
+                    if(e.type === 'touchstart') return; // Handled by handleTouchStart
                     if(e.target.closest('.booth')) return;
-                    // Allow normal touch scrolling if not on map
-                    if(e.type !== 'touchstart') e.preventDefault();
+                    e.preventDefault();
                     
                     this.isDragging=true; 
                     this.startX=(e.touches?e.touches[0].clientX:e.clientX)-this.panX; 
@@ -908,10 +927,8 @@
                     const end = () => { 
                         this.isDragging=false; 
                         window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', end); 
-                        window.removeEventListener('touchmove', move); window.removeEventListener('touchend', end); 
                     }; 
                     window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
-                    window.addEventListener('touchmove', move, { passive: false }); window.addEventListener('touchend', end); 
                 },
                 zoomIn(){ this.zoomLevel=Math.min(this.zoomLevel*1.2, 4); this.updateTransform(); }, 
                 zoomOut(){ this.zoomLevel=Math.max(this.zoomLevel/1.2, 0.5); this.updateTransform(); }, 

@@ -47,8 +47,55 @@
         .neu-modal-overlay { background: rgba(6, 78, 59, 0.4); backdrop-filter: blur(8px); }
         .logo-container { background: linear-gradient(145deg, #059669, #047857); border-radius: 50%; padding: 8px; box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); display: flex; align-items: center; justify-content: center; }
 
+        /* BOOTH STYLES */
+        .booth { transition: fill 0.3s ease, stroke 0.3s ease, opacity 0.3s ease; cursor: pointer; stroke: #000; stroke-width: 0.5px; fill: #FFFFFF; }
+        .booth rect { fill: inherit; pointer-events: all; }
+        .booth text { font-family: Arial, sans-serif; font-size: 5px; fill: #000; pointer-events: none; text-anchor: middle; dominant-baseline: middle; font-weight: normal; }
+        
+        /* FIX FOR INDOOR MAP (Illustrator coordinate export alignment override) */
+        #indoor-svg .booth text {
+            text-anchor: start !important;
+            dominant-baseline: auto !important;
+        }
+
+        /* Highlight when Available */
+        .booth.status-available:hover { stroke: #059669 !important; stroke-width: 2px !important; z-index: 100; }
+        
+        /* DIMMED STATE (FILTER ON) */
+        .booth.dimmed { 
+            fill: transparent !important; 
+            stroke: rgba(0,0,0,0.1) !important; 
+            stroke-width: 0.5px !important;
+            opacity: 0.4 !important;
+            pointer-events: none; 
+        }
+
+        /* PRICES */
+        .booth.price-4000 { fill: var(--col-retail-inter) !important; }
+        .booth.price-4500 { fill: var(--col-retail-corner) !important; }
+        .booth.price-2500 { fill: var(--col-fnb-out-inter) !important; }
+        .booth.price-3000 { fill: var(--col-fnb-out-corner) !important; }
+
+        /* SOLD STATE */
+        .booth.status-sold, .booth.status-booked, .booth.status-fullypaid { 
+            fill: var(--col-sold-fill) !important; 
+            stroke: var(--col-sold-stroke) !important; 
+            stroke-width: 1px !important; 
+            stroke-dasharray: 4,2; 
+            opacity: 1 !important; 
+            cursor: not-allowed; 
+        }
+        
+        .booth.selected { fill: #059669 !important; stroke: white !important; stroke-width: 2px !important; filter: drop-shadow(0 0 8px rgba(5, 150, 105, 0.6)); animation: selectedGlow 2s ease-in-out infinite; }
+        .booth.searched { stroke: #059669 !important; stroke-width: 6px !important; animation: searchPulse 0.8s infinite alternate !important; z-index: 200 !important; }
+        
+        @keyframes searchPulse { 0% { fill: #ffffff; stroke-width: 4px; filter: drop-shadow(0 0 5px #059669); } 100% { fill: #a7f3d0; stroke-width: 8px; filter: drop-shadow(0 0 20px #059669); } }
+        @keyframes selectedGlow { 0% { filter: drop-shadow(0 0 5px rgba(5, 150, 105, 0.6)); } 50% { filter: drop-shadow(0 0 15px rgba(5, 150, 105, 0.9)); } 100% { filter: drop-shadow(0 0 5px rgba(5, 150, 105, 0.6)); } }
+
+        .tooltip { position: fixed; z-index: 100; background: rgba(6, 78, 59, 0.95); color: white; padding: 12px; border-radius: 12px; font-size: 12px; pointer-events: none; border: 1px solid #34d399; transform: translate(-50%, -110%); box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: opacity 0.15s ease; }
         .notification-toast { position: fixed; top: 90px; right: 20px; z-index: 200; background: #ecfdf5; border-radius: 16px; padding: 16px 24px; box-shadow: 8px 8px 16px #a7f3d0, -8px -8px 16px #ffffff; border: 1px solid rgba(255,255,255,0.5); display: flex; align-items: center; gap: 15px; transform: translateX(150%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-width: 350px; }
         .notification-toast.show { transform: translateX(0); }
+        .footer-bg { background: #059669; color: white; }
         .social-media-icons { display: flex; flex-direction: row; gap: 12px; }
         .neu-icon-btn { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-color); box-shadow: 5px 5px 10px #a7f3d0, -5px -5px 10px #ffffff; color: #059669; text-decoration: none; transition: all 0.2s ease; }
         .lang-btn { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; transition: transform 0.2s; border: 2px solid transparent; }
@@ -122,9 +169,9 @@
 
     <div class="py-4">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-center items-center gap-4 px-4">
-            <div class="relative w-full max-w-xs order-2 md:order-1 opacity-50 pointer-events-none">
-                <input type="text" x-model="searchQuery" disabled :placeholder="t('searchPlaceholder')" class="neu-input pl-10 uppercase font-bold text-emerald-600">
-                <button disabled class="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-500"><i class="fas fa-search"></i></button>
+            <div class="relative w-full max-w-xs order-2 md:order-1">
+                <input type="text" x-model="searchQuery" @keyup.enter="searchBooth" :placeholder="t('searchPlaceholder')" class="neu-input pl-10 uppercase font-bold text-emerald-600">
+                <button @click="searchBooth" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-500"><i class="fas fa-search"></i></button>
             </div>
             <div class="flex gap-4 order-1 md:order-2">
                 <button @click="switchZone('indoor')" :class="currentZone === 'indoor' ? 'neu-btn active' : 'neu-btn'" class="px-6 py-3 rounded-xl font-bold text-sm" x-text="t('indoor')"></button>
@@ -153,24 +200,811 @@
             </div>
         </div>
 
-        <div class="neu-panel p-6 relative h-[450px] md:h-[600px] overflow-hidden mb-8 bg-white flex flex-col items-center justify-center">
-            <div class="w-full max-w-lg bg-emerald-50 p-10 rounded-3xl border border-emerald-100 text-center shadow-inner flex flex-col items-center">
-                <div class="mb-6 relative">
-                    <div class="absolute inset-0 bg-emerald-200 rounded-full blur-xl opacity-50 animate-pulse"></div>
-                    <div class="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center relative z-10 border border-emerald-100">
-                        <i class="fas fa-tools text-5xl text-emerald-500"></i>
+        <div class="neu-panel p-2 relative h-[450px] md:h-[600px] overflow-hidden mb-8 bg-white" style="touch-action: none;">
+            <div x-show="loading" class="absolute top-2 right-2 z-30 bg-white/80 px-3 py-1 rounded-full text-xs font-bold text-emerald-500 shadow flex items-center gap-2"><i class="fas fa-circle-notch fa-spin"></i> <span x-text="t('syncing')"></span></div>
+            <div class="absolute top-4 left-4 z-20 pointer-events-none"><span class="neu-pressed px-3 py-1 text-xs font-bold text-emerald-500 uppercase tracking-wider" x-text="t(currentZone)"></span></div>
+            <div class="absolute top-4 right-4 z-20 flex flex-col gap-3">
+                <button @click="zoomIn()" class="neu-circle"><i class="fas fa-plus"></i></button>
+                <button @click="zoomOut()" class="neu-circle"><i class="fas fa-minus"></i></button>
+                <button @click="resetZoom()" class="neu-circle"><i class="fas fa-compress"></i></button>
+                <button @click="toggleFilter" :class="filterAvailable ? 'bg-green-100 text-green-600 border border-green-300' : ''" class="neu-circle" title="Filter Available"><i class="fas fa-filter"></i></button>
+            </div>
+
+            <div x-ref="floorplanContainer" 
+                 @touchstart="handleTouchStart" 
+                 @touchmove="handleTouchMove" 
+                 @touchend="handleTouchEnd"
+                 @mousedown="startDrag"
+                 @click="handleMapClick"
+                 class="w-full h-full origin-top-left cursor-move" 
+                 style="transform-origin: 0 0;">
+
+                <svg x-show="currentZone === 'indoor'" id="indoor-svg" viewBox="0 0 952.22 535.64" xmlns="http://www.w3.org/2000/svg">
+                    <image href="https://i.imgur.com/ypQT5W4.jpeg" x="0" y="0" width="952.22" height="535.64" opacity="0.6"/>
+                    <rect x="244.65" y="260.37" width="276.66" height="31.42" fill="#24ffff" opacity="0.2" pointer-events="none"/>
+                    <defs>
+                        <style>
+                          .cls-1 { stroke: #000; }
+                          .cls-1, .cls-2 { fill: none; stroke-miterlimit: 10; }
+                          .cls-3 { font-size: 8px; }
+                          .cls-3, .cls-4, .cls-5, .cls-6 { font-family: ArialMT, Arial; }
+                          .cls-7 { letter-spacing: -.07em; }
+                          .cls-2 { stroke: #020202; stroke-width: .75px; }
+                          .cls-4 { font-size: 5px; }
+                          .cls-5 { font-size: 7px; }
+                          .cls-6 { font-size: 4px; }
+                        </style>
+                    </defs>
+                    <g id="1" class="booth">
+                      <rect class="cls-2" x="184.9" y="248.5" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(188.94 255.46)"><tspan x="0" y="0">1</tspan></text>
+                    </g>
+                    <g id="2" class="booth">
+                      <rect class="cls-2" x="196.25" y="248.5" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(200.28 255.46)"><tspan x="0" y="0">2</tspan></text>
+                    </g>
+                    <g id="3" class="booth">
+                      <rect class="cls-2" x="207.59" y="248.5" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(211.63 255.46)"><tspan x="0" y="0">3</tspan></text>
+                    </g>
+                    <g id="4" class="booth">
+                      <rect class="cls-2" x="218.94" y="248.5" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(222.97 255.46)"><tspan x="0" y="0">4</tspan></text>
+                    </g>
+                    <g id="7" class="booth">
+                      <rect class="cls-2" x="230.29" y="248.5" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(234.32 255.46)"><tspan x="0" y="0">7</tspan></text>
+                    </g>
+                    <g id="40" class="booth">
+                      <rect class="cls-2" x="525.62" y="246.68" width="10.85" height="10.85"/>
+                      <text uhclass="cls-4" transform="translate(528.26 253.64)"><tspan x="0" y="0">40</tspan></text>
+                    </g>
+                    <g id="41" class="booth">
+                      <rect class="cls-2" x="536.46" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(539.11 253.64)"><tspan x="0" y="0">41</tspan></text>
+                    </g>
+                    <g id="42" class="booth">
+                      <rect class="cls-2" x="547.31" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(549.95 253.64)"><tspan x="0" y="0">42</tspan></text>
+                    </g>
+                    <g id="43" class="booth">
+                      <rect class="cls-2" x="558.16" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(560.8 253.64)"><tspan x="0" y="0">43</tspan></text>
+                    </g>
+                    <g id="46" class="booth">
+                      <rect class="cls-2" x="569" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(571.64 253.64)"><tspan x="0" y="0">46</tspan></text>
+                    </g>
+                    <g id="47" class="booth">
+                      <rect class="cls-2" x="616.06" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(618.7 253.64)"><tspan x="0" y="0">47</tspan></text>
+                    </g>
+                    <g id="50" class="booth">
+                      <rect class="cls-2" x="626.91" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(629.55 253.64)"><tspan x="0" y="0">50</tspan></text>
+                    </g>
+                    <g id="61" class="booth">
+                      <rect class="cls-2" x="597.19" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(599.84 161.57)"><tspan x="0" y="0">61</tspan></text>
+                    </g>
+                    <g id="62" class="booth">
+                      <rect class="cls-2" x="585.85" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(588.49 161.57)"><tspan x="0" y="0">62</tspan></text>
+                    </g>
+                    <g id="63" class="booth">
+                      <rect class="cls-2" x="574.5" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(577.14 161.57)"><tspan x="0" y="0">63</tspan></text>
+                    </g>
+                    <g id="64" class="booth">
+                      <rect class="cls-2" x="563.16" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(565.8 161.57)"><tspan x="0" y="0">64</tspan></text>
+                    </g>
+                    <g id="65" class="booth">
+                      <rect class="cls-2" x="551.81" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(554.45 161.57)"><tspan x="0" y="0">65</tspan></text>
+                    </g>
+                    <g id="67" class="booth">
+                      <rect class="cls-2" x="494.18" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(496.82 161.57)"><tspan x="0" y="0">67</tspan></text>
+                    </g>
+                    <g id="68" class="booth">
+                      <rect class="cls-2" x="483.33" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(485.98 161.57)"><tspan x="0" y="0">68</tspan></text>
+                    </g>
+                    <g id="70" class="booth">
+                      <rect class="cls-2" x="472.49" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(475.13 161.57)"><tspan x="0" y="0">70</tspan></text>
+                    </g>
+                    <g id="71" class="booth">
+                      <rect class="cls-2" x="461.64" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(464.28 161.57)"><tspan x="0" y="0">71</tspan></text>
+                    </g>
+                    <g id="72" class="booth">
+                      <rect class="cls-2" x="156.16" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(158.81 161.57)"><tspan x="0" y="0">72</tspan></text>
+                    </g>
+                    <g id="73" class="booth">
+                      <rect class="cls-2" x="145.32" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(147.96 161.57)"><tspan x="0" y="0">73</tspan></text>
+                    </g>
+                    <g id="75" class="booth">
+                      <rect class="cls-2" x="134.47" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(137.11 161.57)"><tspan x="0" y="0">75</tspan></text>
+                    </g>
+                    <g id="76" class="booth">
+                      <rect class="cls-2" x="123.63" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(126.27 161.57)"><tspan x="0" y="0">76</tspan></text>
+                    </g>
+                    <g id="81" class="booth">
+                      <rect class="cls-2" x="112.78" y="154.61" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(115.42 161.57)"><tspan x="0" y="0">81</tspan></text>
+                    </g>
+                    <g id="82" class="booth">
+                      <rect class="cls-2" x="90.52" y="178.49" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(93.16 185.46)"><tspan x="0" y="0">82</tspan></text>
+                    </g>
+                    <g id="84" class="booth">
+                      <rect class="cls-2" x="90.52" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(93.16 196.3)"><tspan x="0" y="0">84</tspan></text>
+                    </g>
+                    <g id="85" class="booth">
+                      <rect class="cls-2" x="90.52" y="211.58" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(93.16 218.54)"><tspan x="0" y="0">85</tspan></text>
+                    </g>
+                    <g id="86" class="booth">
+                      <rect class="cls-2" x="90.52" y="222.92" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(93.16 229.88)"><tspan x="0" y="0">86</tspan></text>
+                    </g>
+                    <g id="88" class="booth">
+                      <rect class="cls-2" x="109.47" y="248.5" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(112.12 255.46)"><tspan x="0" y="0">88</tspan></text>
+                    </g>
+                    <g id="53" class="booth">
+                      <rect class="cls-2" x="120.82" y="248.5" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(123.46 255.46)"><tspan x="0" y="0">53</tspan></text>
+                    </g>
+                    <g id="90" class="booth">
+                      <rect class="cls-2" x="132.16" y="248.5" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(134.81 255.46)"><tspan x="0" y="0">90</tspan></text>
+                    </g>
+                    <g id="91" class="booth">
+                      <rect class="cls-2" x="213.52" y="222.92" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(216.16 229.88)"><tspan x="0" y="0">91</tspan></text>
+                    </g>
+                    <g id="92" class="booth">
+                      <rect class="cls-2" x="224.86" y="222.92" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(227.5 229.88)"><tspan x="0" y="0">92</tspan></text>
+                    </g>
+                    <g id="93" class="booth">
+                      <rect class="cls-2" x="256.26" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(258.91 229.88)"><tspan x="0" y="0">93</tspan></text>
+                    </g>
+                    <g id="95" class="booth">
+                      <rect class="cls-2" x="267.11" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(269.75 229.88)"><tspan x="0" y="0">95</tspan></text>
+                    </g>
+                    <g id="96" class="booth">
+                      <rect class="cls-2" x="277.96" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(280.6 229.88)"><tspan x="0" y="0">96</tspan></text>
+                    </g>
+                    <g id="97" class="booth">
+                      <rect class="cls-2" x="288.8" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(291.44 229.88)"><tspan x="0" y="0">97</tspan></text>
+                    </g>
+                    <g id="98" class="booth">
+                      <rect class="cls-2" x="288.8" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(291.44 218.39)"><tspan x="0" y="0">98</tspan></text>
+                    </g>
+                    <g id="99" class="booth">
+                      <rect class="cls-2" x="277.96" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(280.6 218.39)"><tspan x="0" y="0">52</tspan></text>
+                    </g>
+                    <g id="101" class="booth">
+                      <rect class="cls-2" x="267.11" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(268.36 218.39)"><tspan x="0" y="0">101</tspan></text>
+                    </g>
+                    <g id="102" class="booth">
+                      <rect class="cls-2" x="256.26" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(257.52 218.39)"><tspan x="0" y="0">102</tspan></text>
+                    </g>
+                    <g id="103" class="booth">
+                      <rect class="cls-2" x="224.86" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(226.11 218.39)"><tspan x="0" y="0">103</tspan></text>
+                    </g>
+                    <g id="104" class="booth">
+                      <rect class="cls-2" x="213.52" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(214.77 218.39)"><tspan x="0" y="0">104</tspan></text>
+                    </g>
+                    <g id="105" class="booth">
+                      <rect class="cls-2" x="269.96" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(271.21 196.3)"><tspan x="0" y="0">105</tspan></text>
+                    </g>
+                    <g id="108" class="booth">
+                      <rect class="cls-2" x="258.61" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(259.86 196.3)"><tspan x="0" y="0">108</tspan></text>
+                    </g>
+                    <g id="109" class="booth">
+                      <rect class="cls-2" x="247.26" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(248.52 196.3)"><tspan x="0" y="0">109</tspan></text>
+                    </g>
+                    <g id="110" class="booth">
+                      <rect class="cls-2" x="224.86" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(226.3 196.3)"><tspan class="cls-7" x="0" y="0">1</tspan><tspan x="2.41" y="0">10</tspan></text>
+                    </g>
+                    <g id="111" class="booth">
+                      <rect class="cls-2" x="213.52" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(215.14 196.3)"><tspan class="cls-7" x="0" y="0">11</tspan><tspan x="4.82" y="0">1</tspan></text>
+                    </g>
+                    <g id="112" class="booth">
+                      <rect class="cls-2" x="191.58" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(193.02 196.3)"><tspan class="cls-7" x="0" y="0">1</tspan><tspan x="2.41" y="0">12</tspan></text>
+                    </g>
+                    <g id="113" class="booth">
+                      <rect class="cls-2" x="180.24" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(181.68 196.3)"><tspan class="cls-7" x="0" y="0">1</tspan><tspan x="2.41" y="0">13</tspan></text>
+                    </g>
+                    <g id="114" class="booth">
+                      <rect class="cls-2" x="158.78" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(160.22 196.3)"><tspan class="cls-7" x="0" y="0">1</tspan><tspan x="2.41" y="0">14</tspan></text>
+                    </g>
+                    <g id="115" class="booth">
+                      <rect class="cls-2" x="147.43" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(148.87 196.3)"><tspan class="cls-7" x="0" y="0">1</tspan><tspan x="2.41" y="0">15</tspan></text>
+                    </g>
+                    <g id="116" class="booth">
+                      <rect class="cls-2" x="124.17" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(125.61 196.3)"><tspan class="cls-7" x="0" y="0">1</tspan><tspan x="2.41" y="0">16</tspan></text>
+                    </g>
+                    <g id="117" class="booth">
+                      <rect class="cls-2" x="112.83" y="189.34" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(114.26 196.3)"><tspan class="cls-7" x="0" y="0">1</tspan><tspan x="2.41" y="0">17</tspan></text>
+                    </g>
+                    <g id="118" class="booth">
+                      <rect class="cls-2" x="112.83" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(114.26 184.96)"><tspan class="cls-7" x="0" y="0">1</tspan><tspan x="2.41" y="0">18</tspan></text>
+                    </g>
+                    <g id="119" class="booth">
+                      <rect class="cls-2" x="124.17" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(125.61 184.96)"><tspan class="cls-7" x="0" y="0">1</tspan><tspan x="2.41" y="0">19</tspan></text>
+                    </g>
+                    <g id="120" class="booth">
+                      <rect class="cls-2" x="147.43" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(148.69 184.96)"><tspan x="0" y="0">120</tspan></text>
+                    </g>
+                    <g id="121" class="booth">
+                      <rect class="cls-2" x="158.78" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(160.03 184.96)"><tspan x="0" y="0">121</tspan></text>
+                    </g>
+                    <g id="122" class="booth">
+                      <rect class="cls-2" x="179.99" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(181.24 184.96)"><tspan x="0" y="0">122</tspan></text>
+                    </g>
+                    <g id="123" class="booth">
+                      <rect class="cls-2" x="191.33" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(192.59 184.96)"><tspan x="0" y="0">123</tspan></text>
+                    </g>
+                    <g id="124" class="booth">
+                      <rect class="cls-2" x="213.52" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(214.77 184.96)"><tspan x="0" y="0">124</tspan></text>
+                    </g>
+                    <g id="125" class="booth">
+                      <rect class="cls-2" x="224.86" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(226.11 184.96)"><tspan x="0" y="0">125</tspan></text>
+                    </g>
+                    <g id="126" class="booth">
+                      <rect class="cls-2" x="247.26" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(248.52 184.96)"><tspan x="0" y="0">126</tspan></text>
+                    </g>
+                    <g id="127" class="booth">
+                      <rect class="cls-2" x="258.61" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(259.86 184.96)"><tspan x="0" y="0">127</tspan></text>
+                    </g>
+                    <g id="128" class="booth">
+                      <rect class="cls-2" x="269.96" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(271.21 184.96)"><tspan x="0" y="0">128</tspan></text>
+                    </g>
+                    <g id="130" class="booth">
+                      <rect class="cls-2" x="281.3" y="177.99" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(282.55 184.96)"><tspan x="0" y="0">130</tspan></text>
+                    </g>
+                    <g id="131" class="booth">
+                      <rect class="cls-2" x="267.35" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(268.6 253.64)"><tspan x="0" y="0">131</tspan></text>
+                    </g>
+                    <g id="132" class="booth">
+                      <rect class="cls-2" x="278.7" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(279.95 253.64)"><tspan x="0" y="0">132</tspan></text>
+                    </g>
+                    <g id="133" class="booth">
+                      <rect class="cls-2" x="290.04" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(291.29 253.64)"><tspan x="0" y="0">133</tspan></text>
+                    </g>
+                    <g id="159" class="booth">
+                      <rect class="cls-2" x="301.39" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(302.64 253.64)"><tspan x="0" y="0">159</tspan></text>
+                    </g>
+                    <g id="158" class="booth">
+                      <rect class="cls-2" x="312.02" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(313.27 253.64)"><tspan x="0" y="0">158</tspan></text>
+                    </g>
+                    <g id="135" class="booth">
+                      <rect class="cls-2" x="350.35" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(351.6 253.64)"><tspan x="0" y="0">135</tspan></text>
+                    </g>
+                    <g id="136" class="booth">
+                      <rect class="cls-2" x="361.7" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(362.95 253.64)"><tspan x="0" y="0">136</tspan></text>
+                    </g>
+                    <g id="137" class="booth">
+                      <rect class="cls-2" x="373.04" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(374.29 253.64)"><tspan x="0" y="0">137</tspan></text>
+                    </g>
+                    <g id="138" class="booth">
+                      <rect class="cls-2" x="384.39" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(385.64 253.64)"><tspan x="0" y="0">138</tspan></text>
+                    </g>
+                    <g id="139" class="booth">
+                      <rect class="cls-2" x="395.23" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(396.48 253.64)"><tspan x="0" y="0">139</tspan></text>
+                    </g>
+                    <g id="140" class="booth">
+                      <rect class="cls-2" x="420.61" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(421.87 253.64)"><tspan x="0" y="0">140</tspan></text>
+                    </g>
+                    <g id="142" class="booth">
+                      <rect class="cls-2" x="431.96" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(433.21 253.64)"><tspan x="0" y="0">142</tspan></text>
+                    </g>
+                    <g id="143" class="booth">
+                      <rect class="cls-2" x="443.3" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(444.56 253.64)"><tspan x="0" y="0">143</tspan></text>
+                    </g>
+                    <g id="144" class="booth">
+                      <rect class="cls-2" x="454.65" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(455.9 253.64)"><tspan x="0" y="0">144</tspan></text>
+                    </g>
+                    <g id="145" class="booth">
+                      <rect class="cls-2" x="466" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(467.25 253.64)"><tspan x="0" y="0">145</tspan></text>
+                    </g>
+                    <g id="146" class="booth">
+                      <rect class="cls-2" x="477.34" y="246.68" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(478.59 253.64)"><tspan x="0" y="0">146</tspan></text>
+                    </g>
+                    <g id="147" class="booth">
+                      <rect class="cls-2" x="465.28" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(466.53 229.88)"><tspan x="0" y="0">147</tspan></text>
+                    </g>
+                    <g id="148" class="booth">
+                      <rect class="cls-2" x="476.62" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(477.88 229.88)"><tspan x="0" y="0">148</tspan></text>
+                    </g>
+                    <g id="149" class="booth">
+                      <rect class="cls-2" x="487.97" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(489.22 229.88)"><tspan x="0" y="0">149</tspan></text>
+                    </g>
+                    <g id="150" class="booth">
+                      <rect class="cls-2" x="499.32" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(500.57 229.88)"><tspan x="0" y="0">150</tspan></text>
+                    </g>
+                    <g id="151" class="booth">
+                      <rect class="cls-2" x="544.67" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(545.93 229.88)"><tspan x="0" y="0">151</tspan></text>
+                    </g>
+                    <g id="154" class="booth">
+                      <rect class="cls-2" x="555.52" y="222.91" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(556.77 229.88)"><tspan x="0" y="0">154</tspan></text>
+                    </g>
+                    <g id="155" class="booth">
+                      <rect class="cls-2" x="614.64" y="222.74" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(615.89 229.7)"><tspan x="0" y="0">155</tspan></text>
+                    </g>
+                    <g id="156" class="booth">
+                      <rect class="cls-2" x="625.98" y="222.74" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(627.23 229.7)"><tspan x="0" y="0">156</tspan></text>
+                    </g>
+                    <g id="157" class="booth">
+                      <rect class="cls-2" x="625.98" y="211.39" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(627.23 218.36)"><tspan x="0" y="0">157</tspan></text>
+                    </g>
+                    <g id="160" class="booth">
+                      <rect class="cls-2" x="614.64" y="211.39" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(615.89 218.36)"><tspan x="0" y="0">160</tspan></text>
+                    </g>
+                    <g id="161" class="booth">
+                      <rect class="cls-2" x="555.77" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(557.02 218.39)"><tspan x="0" y="0">161</tspan></text>
+                    </g>
+                    <g id="166" class="booth">
+                      <rect class="cls-2" x="544.42" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(545.68 218.39)"><tspan x="0" y="0">166</tspan></text>
+                    </g>
+                    <g id="165" class="booth">
+                      <rect class="cls-2" x="533.58" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(534.83 218.39)"><tspan x="0" y="0">165</tspan></text>
+                    </g>
+                    <g id="164" class="booth">
+                      <rect class="cls-2" x="499.32" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(500.57 218.39)"><tspan x="0" y="0">164</tspan></text>
+                    </g>
+                    <g id="153" class="booth">
+                      <rect class="cls-2" x="487.97" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(489.22 218.39)"><tspan x="0" y="0">153</tspan></text>
+                    </g>
+                    <g id="152" class="booth">
+                      <rect class="cls-2" x="476.62" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(477.88 218.39)"><tspan x="0" y="0">152</tspan></text>
+                    </g>
+                    <g id="168" class="booth">
+                      <rect class="cls-2" x="465.28" y="211.42" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(466.53 218.39)"><tspan x="0" y="0">168</tspan></text>
+                    </g>
+                    <g id="169" class="booth">
+                      <rect class="cls-2" x="465.03" y="188.76" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(466.28 195.72)"><tspan x="0" y="0">169</tspan></text>
+                    </g>
+                    <g id="171" class="booth">
+                      <rect class="cls-2" x="475.87" y="188.76" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(477.13 195.72)"><tspan x="0" y="0">171</tspan></text>
+                    </g>
+                    <g id="172" class="booth">
+                      <rect class="cls-2" x="486.72" y="188.76" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(487.97 195.72)"><tspan x="0" y="0">172</tspan></text>
+                    </g>
+                    <g id="173" class="booth">
+                      <rect class="cls-2" x="521.73" y="188.76" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(522.98 195.72)"><tspan x="0" y="0">173</tspan></text>
+                    </g>
+                    <g id="174" class="booth">
+                      <rect class="cls-2" x="533.08" y="188.76" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(534.33 195.72)"><tspan x="0" y="0">174</tspan></text>
+                    </g>
+                    <g id="175" class="booth">
+                      <rect class="cls-2" x="544.42" y="188.76" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(545.68 195.72)"><tspan x="0" y="0">175</tspan></text>
+                    </g>
+                    <g id="176" class="booth">
+                      <rect class="cls-2" x="555.77" y="188.76" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(557.02 195.72)"><tspan x="0" y="0">176</tspan></text>
+                    </g>
+                    <g id="177" class="booth">
+                      <rect class="cls-2" x="614.89" y="188.76" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(616.14 195.72)"><tspan x="0" y="0">177</tspan></text>
+                    </g>
+                    <g id="179" class="booth">
+                      <rect class="cls-2" x="626.23" y="188.76" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(627.48 195.72)"><tspan x="0" y="0">179</tspan></text>
+                    </g>
+                    <g id="180" class="booth">
+                      <rect class="cls-2" x="626.23" y="177.1" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(627.48 184.06)"><tspan x="0" y="0">180</tspan></text>
+                    </g>
+                    <g id="182" class="booth">
+                      <rect class="cls-2" x="614.89" y="177.1" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(616.14 184.06)"><tspan x="0" y="0">182</tspan></text>
+                    </g>
+                    <g id="183" class="booth">
+                      <rect class="cls-2" x="555.77" y="177.1" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(557.02 184.06)"><tspan x="0" y="0">183</tspan></text>
+                    </g>
+                    <g id="184" class="booth">
+                      <rect class="cls-2" x="544.42" y="177.1" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(545.68 184.06)"><tspan x="0" y="0">184</tspan></text>
+                    </g>
+                    <g id="185" class="booth">
+                      <rect class="cls-2" x="533.08" y="177.1" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(534.33 184.06)"><tspan x="0" y="0">185</tspan></text>
+                    </g>
+                    <g id="186" class="booth">
+                      <rect class="cls-2" x="521.73" y="177.1" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(522.98 184.06)"><tspan x="0" y="0">186</tspan></text>
+                    </g>
+                    <g id="187" class="booth">
+                      <rect class="cls-2" x="486.47" y="177.46" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(487.72 184.42)"><tspan x="0" y="0">187</tspan></text>
+                    </g>
+                    <g id="189" class="booth">
+                      <rect class="cls-2" x="475.62" y="177.46" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(476.88 184.42)"><tspan x="0" y="0">189</tspan></text>
+                    </g>
+                    <g id="190" class="booth">
+                      <rect class="cls-2" x="464.78" y="177.46" width="10.85" height="10.85"/>
+                      <text class="cls-4" transform="translate(466.03 184.42)"><tspan x="0" y="0">190</tspan></text>
+                    </g>
+                    <g id="G1" class="booth">
+                      <text class="cls-3" transform="translate(118.31 224.69)"><tspan x="0" y="0">G1</tspan></text>
+                      <rect class="cls-1" x="112.27" y="211.92" width="22.74" height="22.74"/>
+                    </g>
+                    <g id="G2" class="booth">
+                      <text class="cls-3" transform="translate(152.94 224.69)"><tspan x="0" y="0">G2</tspan></text>
+                      <rect class="cls-1" x="146.91" y="211.92" width="22.74" height="22.74"/>
+                    </g>
+                    <g id="G3" class="booth">
+                      <text class="cls-3" transform="translate(185.75 224.69)"><tspan x="0" y="0">G3</tspan></text>
+                      <rect class="cls-1" x="179.71" y="211.92" width="22.74" height="22.74"/>
+                    </g>
+                    <g id="G5" class="booth">
+                      <text class="cls-3" transform="translate(344.01 224.69)"><tspan x="0" y="0">G5</tspan></text>
+                      <rect class="cls-1" x="337.98" y="211.92" width="22.74" height="22.74"/>
+                    </g>
+                    <g id="G7" class="booth">
+                      <text class="cls-3" transform="translate(377.85 224.69)"><tspan x="0" y="0">G7</tspan></text>
+                      <rect class="cls-1" x="371.82" y="211.92" width="22.74" height="22.74"/>
+                    </g>
+                    <g id="G8" class="booth">
+                      <text class="cls-3" transform="translate(412.59 224.69)"><tspan x="0" y="0">G8</tspan></text>
+                      <rect class="cls-1" x="406.55" y="211.92" width="22.74" height="22.74"/>
+                    </g>
+                    <g id="G10" class="booth">
+                      <text class="cls-3" transform="translate(584.74 190.32)"><tspan x="0" y="0">G10</tspan></text>
+                      <rect class="cls-1" x="580.93" y="177.1" width="22.74" height="22.74"/>
+                    </g>
+                    <g id="G9" class="booth">
+                      <text class="cls-5" transform="translate(587.63 223.45)"><tspan x="0" y="0">G9</tspan></text>
+                      <rect class="cls-1" x="580.93" y="211.39" width="22.74" height="22.74"/>
+                    </g>
+                    <g id="R1" class="booth">
+                      <rect class="cls-1" x="311.84" y="211.92" width="11.37" height="22.74"/>
+                      <text class="cls-6" transform="translate(314.97 222.89)"><tspan x="0" y="0">R1</tspan></text>
+                    </g>
+                    <g id="R2" class="booth">
+                      <rect class="cls-1" x="440.36" y="211.92" width="11.37" height="22.74"/>
+                      <text class="cls-6" transform="translate(443.49 222.89)"><tspan x="0" y="0">R2</tspan></text>
+                    </g>
+                    <g id="F1" class="booth">
+                      <rect class="cls-1" x="499.39" y="324.16" width="22.74" height="11.37"/>
+                      <text class="cls-4" transform="translate(507.84 331.39)"><tspan x="0" y="0">F1</tspan></text>
+                    </g>
+                    <g id="F2" class="booth">
+                      <rect class="cls-1" x="465" y="324.16" width="22.74" height="11.37"/>
+                      <text class="cls-4" transform="translate(473.46 331.39)"><tspan x="0" y="0">F2</tspan></text>
+                    </g>
+                    <g id="F5" class="booth">
+                      <rect class="cls-1" x="123.89" y="333.66" width="22.74" height="11.37" transform="translate(154.98 -25.43) rotate(24.83)"/>
+                      <text class="cls-4" transform="translate(132.03 339.51) rotate(24.83)"><tspan x="0" y="0">F5</tspan></text>
+                    </g>
+                    <g id="F6" class="booth">
+                      <rect class="cls-1" x="94.57" y="318.06" width="22.74" height="11.37" transform="translate(203.52 -2.62) rotate(34.77)"/>
+                      <text class="cls-4" transform="translate(102.67 323.39) rotate(34.77)"><tspan x="0" y="0">F6</tspan></text>
+                    </g>
+                </svg>
+
+                <svg x-show="currentZone === 'outdoor'" id="outdoor-svg" viewBox="0 0 965.21 842" xmlns="http://www.w3.org/2000/svg" x-cloak>
+                    <image href="https://i.postimg.cc/ryHz30TC/bkg-01-01.jpg" width="965.21" height="842" x="0" y="0" opacity="0.6"/>
+                    
+                    <g id="C1">
+      <g id="C1-2" data-name="C1">
+        <rect class="cls-2" x="675.98" y="315.54" width="18.66" height="10.97" transform="translate(425.68 -389.82) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(682.81 322.2) rotate(-.16)"><tspan x="0" y="0">C1</tspan></text>
+      </g>
+    </g>
+    <g id="C2">
+      <g id="C2-2" data-name="C2">
+        <rect class="cls-2" x="684.2" y="307.27" width="18.66" height="10.97" transform="translate(422.24 -398.02) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(691.04 313.93) rotate(-.16)"><tspan x="0" y="0">C2</tspan></text>
+      </g>
+    </g>
+    <g id="C3">
+      <g id="C3-2" data-name="C3">
+        <rect class="cls-2" x="692.39" y="299.03" width="18.66" height="10.97" transform="translate(418.82 -406.19) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(699.22 305.69) rotate(-.16)"><tspan x="0" y="0">C3</tspan></text>
+      </g>
+    </g>
+    <g id="C4">
+      <g id="C4-2" data-name="C4">
+        <rect class="cls-2" x="699.92" y="291.46" width="18.66" height="10.97" transform="translate(415.67 -413.71) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(706.76 298.12) rotate(-.16)"><tspan x="0" y="0">C4</tspan></text>
+      </g>
+    </g>
+    <g id="C5">
+      <g id="C5-2" data-name="C5">
+        <rect class="cls-2" x="707.97" y="283.36" width="18.66" height="10.97" transform="translate(412.3 -421.74) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(714.81 290.02) rotate(-.16)"><tspan x="0" y="0">C5</tspan></text>
+      </g>
+    </g>
+    <g id="C6">
+      <g id="C6-2" data-name="C6">
+        <rect class="cls-2" x="716" y="275.29" width="18.66" height="10.97" transform="translate(408.94 -429.74) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(722.83 281.95) rotate(-.16)"><tspan x="0" y="0">C6</tspan></text>
+      </g>
+    </g>
+    <g id="C7">
+      <g id="GroupC7">
+        <rect class="cls-2" x="732.26" y="259.19" width="18.66" height="10.97" transform="translate(402.32 -445.9) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(739.1 265.85) rotate(-.16)"><tspan x="0" y="0">C7</tspan></text>
+      </g>
+    </g>
+    <g id="C8">
+      <g id="GroupC8">
+        <rect class="cls-2" x="740.26" y="251.12" width="18.66" height="10.97" transform="translate(398.96 -453.88) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(747.1 257.78) rotate(-.16)"><tspan x="0" y="0">C8</tspan></text>
+      </g>
+    </g>
+    <g id="C9">
+      <g id="GroupC9">
+        <rect class="cls-2" x="748.26" y="243.05" width="18.66" height="10.97" transform="translate(395.59 -461.87) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(755.1 249.71) rotate(-.16)"><tspan x="0" y="0">C9</tspan></text>
+      </g>
+    </g>
+    <g id="C10">
+      <g id="GroupC10">
+        <rect class="cls-2" x="756.26" y="234.98" width="18.66" height="10.97" transform="translate(392.23 -469.85) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(763.09 241.64) rotate(-.16)"><tspan x="0" y="0">C10</tspan></text>
+      </g>
+    </g>
+    <g id="C11">
+      <g id="GroupC11">
+        <rect class="cls-2" x="764.26" y="226.91" width="18.66" height="10.97" transform="translate(388.87 -477.84) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(771.09 233.57) rotate(-.16)"><tspan x="0" y="0">C11</tspan></text>
+      </g>
+    </g>
+    <g id="C12">
+      <g id="GroupC12">
+        <rect class="cls-2" x="772.25" y="218.84" width="18.66" height="10.97" transform="translate(385.5 -485.83) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(779.09 225.5) rotate(-.16)"><tspan x="0" y="0">C12</tspan></text>
+      </g>
+    </g>
+    <g id="C13">
+      <g id="GroupC13">
+        <polygon class="cls-2" points="800.76 218.28 793.46 211.03 787.52 205.13 795.26 197.35 808.49 210.5 800.76 218.28"/>
+        <text class="cls-5" transform="translate(795.51 208.99) rotate(-.16)"><tspan x="0" y="0">C13</tspan></text>
+      </g>
+    </g>
+    <g id="C14">
+      <g id="GroupC14">
+        <rect class="cls-2" x="796.49" y="194.45" width="18.66" height="10.97" transform="translate(375.35 -510.01) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(803.32 201.11) rotate(-.16)"><tspan x="0" y="0">C14</tspan></text>
+      </g>
+    </g>
+    <g id="C15">
+      <g id="GroupC15">
+        <rect class="cls-2" x="804.3" y="186.56" width="18.66" height="10.97" transform="translate(372.07 -517.81) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(811.14 193.22) rotate(-.16)"><tspan x="0" y="0">C15</tspan></text>
+      </g>
+    </g>
+    <g id="C16">
+      <g id="GroupC16">
+        <rect class="cls-2" x="812.11" y="178.68" width="18.66" height="10.97" transform="translate(368.78 -525.61) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(818.95 185.34) rotate(-.16)"><tspan x="0" y="0">C16</tspan></text>
+      </g>
+    </g>
+    <g id="C17">
+      <g id="GroupC17">
+        <rect class="cls-2" x="819.92" y="170.79" width="18.66" height="10.97" transform="translate(365.49 -533.41) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(826.76 177.45) rotate(-.16)"><tspan x="0" y="0">C17</tspan></text>
+      </g>
+    </g>
+    <g id="C18">
+      <g id="GroupC18">
+        <rect class="cls-2" x="827.73" y="162.91" width="18.66" height="10.97" transform="translate(362.21 -541.21) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(834.57 169.57) rotate(-.16)"><tspan x="0" y="0">C18</tspan></text>
+      </g>
+    </g>
+    <g id="C22">
+      <g id="GroupC22">
+        <rect class="cls-2" x="844.33" y="146.73" width="18.66" height="10.97" transform="translate(355.63 -557.62) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(851.17 153.39) rotate(-.16)"><tspan x="0" y="0">C22</tspan></text>
+      </g>
+    </g>
+    <g id="C23">
+      <g id="GroupC23">
+        <rect class="cls-2" x="852.74" y="138.27" width="18.66" height="10.97" transform="translate(352.11 -566.01) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(859.58 144.93) rotate(-.16)"><tspan x="0" y="0">C23</tspan></text>
+      </g>
+    </g>
+    <g id="C24">
+      <g id="GroupC24">
+        <rect class="cls-2" x="684.32" y="246.68" width="18.66" height="10.97" transform="translate(379.56 -415.73) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(691.16 253.34) rotate(-.16)"><tspan x="0" y="0">C24</tspan></text>
+      </g>
+    </g>
+    <g id="C25">
+      <g id="GroupC25">
+        <rect class="cls-2" x="692.32" y="238.64" width="18.66" height="10.97" transform="translate(376.22 -423.7) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(699.15 245.3) rotate(-.16)"><tspan x="0" y="0">C25</tspan></text>
+      </g>
+    </g>
+    <g id="C26">
+      <g id="GroupC26">
+        <rect class="cls-2" x="700.48" y="230.43" width="18.66" height="10.97" transform="translate(372.8 -431.85) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(707.32 237.09) rotate(-.16)"><tspan x="0" y="0">C26</tspan></text>
+      </g>
+    </g>
+    <g id="C27">
+      <g id="GroupC27">
+        <rect class="cls-2" x="708.48" y="222.39" width="18.66" height="10.97" transform="translate(369.46 -439.82) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(715.31 229.05) rotate(-.16)"><tspan x="0" y="0">C27</tspan></text>
+      </g>
+    </g>
+    <g id="C28">
+      <g id="GroupC28">
+        <rect class="cls-2" x="716.34" y="214.48" width="18.66" height="10.97" transform="translate(366.17 -447.68) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(723.18 221.14) rotate(-.16)"><tspan x="0" y="0">C28</tspan></text>
+      </g>
+    </g>
+    <g id="C29">
+      <g id="GroupC29">
+        <rect class="cls-2" x="732.72" y="199.31" width="18.66" height="10.97" transform="translate(360.23 -463.64) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(739.56 205.97) rotate(-.16)"><tspan x="0" y="0">C29</tspan></text>
+      </g>
+    </g>
+    <g id="C30">
+      <g id="GroupC30">
+        <rect class="cls-2" x="740.31" y="191.67" width="18.66" height="10.97" transform="translate(357.06 -471.21) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(747.15 198.33) rotate(-.16)"><tspan x="0" y="0">C30</tspan></text>
+      </g>
+    </g>
+    <g id="C31">
+      <g id="GroupC30-2" data-name="GroupC30">
+        <rect class="cls-2" x="747.9" y="184.04" width="18.66" height="10.97" transform="translate(353.89 -478.78) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(754.74 190.7) rotate(-.16)"><tspan x="0" y="0">C31</tspan></text>
+      </g>
+    </g>
+    <g id="C32">
+      <g id="GroupC30-3" data-name="GroupC30">
+        <rect class="cls-2" x="755.49" y="176.41" width="18.66" height="10.97" transform="translate(350.71 -486.35) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(762.33 183.07) rotate(-.16)"><tspan x="0" y="0">C32</tspan></text>
+      </g>
+    </g>
+    <g id="C33">
+      <g id="GroupC33">
+        <rect class="cls-2" x="763.08" y="168.77" width="18.66" height="10.97" transform="translate(347.54 -493.92) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(769.92 175.43) rotate(-.16)"><tspan x="0" y="0">C33</tspan></text>
+      </g>
+    </g>
+    <g id="C34">
+      <g id="GroupC19">
+        <rect class="cls-2" x="779.97" y="151.79" width="18.66" height="10.97" transform="translate(340.47 -510.77) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(786.8 158.45) rotate(-.16)"><tspan x="0" y="0">C19</tspan></text>
+      </g>
+    </g>
+    <g id="C35">
+      <g id="GroupC20">
+        <rect class="cls-2" x="787.97" y="143.74" width="18.66" height="10.97" transform="translate(337.13 -518.75) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(794.8 150.4) rotate(-.16)"><tspan x="0" y="0">C20</tspan></text>
+      </g>
+    </g>
+    <g id="C36">
+      <g id="GroupC37">
+        <rect class="cls-2" x="795.97" y="135.7" width="18.66" height="10.97" transform="translate(333.78 -526.73) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(802.81 142.36) rotate(-.16)"><tspan x="0" y="0">C37</tspan></text>
+      </g>
+    </g>
+    <g id="C37">
+      <g id="GroupC21">
+        <rect class="cls-2" x="803.97" y="127.65" width="18.66" height="10.97" transform="translate(330.43 -534.72) rotate(44.84)"/>
+        <text class="cls-5" transform="translate(810.81 134.31) rotate(-.16)"><tspan x="0" y="0">C21</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g id="Layer_47" data-name="Layer 47">
+    <g>
+      <rect class="cls-1" x="546.11" y="376.2" width="148.04" height="18.66" transform="translate(-90.4 553.9) rotate(-45.2)"/>
+      <text class="cls-7" transform="translate(558.71 429.55) rotate(-45.2)"><tspan x="0" y="0">KUNA</tspan><tspan class="cls-4" x="29.51" y="0">F</tspan><tspan x="34.42" y="0">A AI</tspan><tspan class="cls-6" x="54.52" y="0">W</tspan><tspan x="63.98" y="0">AH</tspan></text>
+    </g>
+  </g>
+
+                </svg>
+            </div>
+            
+            <div x-show="tooltip.visible" x-bind:style="`top: ${tooltip.y}px; left: ${tooltip.x}px`" class="tooltip" x-cloak><div x-html="tooltip.content"></div></div>
+        </div>
+
+        <div x-show="selectedBooths.length > 0" x-transition class="fixed bottom-0 left-0 right-0 z-50 p-4">
+            <div class="max-w-7xl mx-auto neu-panel p-4 flex flex-col sm:flex-row justify-between items-center gap-4 bg-opacity-95 backdrop-blur-md">
+                <div class="flex-1 w-full">
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="booth in selectedBooths" :key="booth">
+                            <div class="neu-pressed px-3 py-1 rounded-lg flex items-center gap-3"><span class="font-bold text-emerald-700 text-sm" x-text="booth"></span><span class="text-[10px] text-gray-600" x-text="'RM ' + getPrice(booth).toLocaleString()"></span><button @click="toggleSelection(booth)" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button></div>
+                        </template>
                     </div>
                 </div>
-                <h2 class="text-3xl font-bold text-emerald-800 mb-3" x-text="t('maintenanceTitle')"></h2>
-                <p class="text-gray-500 font-medium" x-text="t('maintenanceDesc')"></p>
-                <div class="mt-8">
-                    <button @click="modals.welcome = true" class="px-6 py-2 neu-btn text-sm font-bold flex items-center gap-2">
-                        <i class="fas fa-info-circle"></i> Info Acara
-                    </button>
+                <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                    <div class="text-right"><div class="text-xs text-gray-500" x-text="t('total')"></div><div class="text-xl font-bold text-emerald-600" x-text="'RM ' + totalPrice.toLocaleString()"></div></div>
+                    <button @click="modals.booking = true" class="px-8 py-3 neu-btn-primary font-bold shadow-lg" x-text="t('proceed') + '  ->'"></button>
                 </div>
             </div>
         </div>
-
     </main>
 
     <footer class="neu-panel mt-4 p-6 rounded-none rounded-t-2xl mx-2 mb-0" style="background: var(--bg-color);">
@@ -183,6 +1017,56 @@
             <div class="flex items-center"><div class="text-right mr-3"><h3 class="font-bold text-sm text-gray-700">Absolut Bazaar</h3><p class="text-emerald-500 text-[10px]"><span x-text="t('contact')"></span>: info@absolutevent.my</p></div><div class="logo-container"><img src="https://i.imgur.com/uikzokX.png" alt="Absolut Bazaar" class="h-6 w-6 brightness-0 invert"></div></div>
         </div>
     </footer>
+
+    <div x-show="modals.booking" class="fixed inset-0 neu-modal-overlay z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="neu-panel max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative bg-white">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4"><h2 class="text-2xl font-bold text-gray-800 flex items-center"><i class="fas fa-file-signature text-emerald-500 mr-3"></i> <span x-text="t('bookingForm')"></span></h2><button @click="modals.booking = false" class="text-gray-400 hover:text-emerald-600"><i class="fas fa-times text-xl"></i></button></div>
+            <form @submit.prevent="generateSummary" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('companyName') + ' *'"></label><input type="text" x-model="form.companyName" required class="w-full neu-input"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('brandName') + ' *'"></label><input type="text" x-model="form.brandName" required class="w-full neu-input"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('pic') + ' *'"></label><input type="text" x-model="form.personInCharge" required class="w-full neu-input"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('phone') + ' *'"></label><input type="tel" x-model="form.phoneNumber" required class="w-full neu-input"></div>
+                    <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('email') + ' *'"></label><input type="email" x-model="form.email" required class="w-full neu-input"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Social Media</label><input type="url" x-model="form.socialMedia" class="w-full neu-input"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('sellingItems') + ' *'"></label><input type="text" x-model="form.sellingItems" required class="w-full neu-input"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1" x-text="t('billingAddr') + ' *'"></label><textarea x-model="form.billingAddress" required rows="2" class="w-full neu-input"></textarea></div>
+                <div class="flex items-start gap-3 mt-2"><input type="checkbox" required class="mt-1 accent-emerald-600"><p class="text-xs text-gray-600">I understand that this is a booking request.</p></div>
+                <div class="flex gap-4 pt-4"><button type="button" @click="modals.booking = false" class="flex-1 py-3 neu-btn" x-text="t('cancel')"></button><button type="submit" class="flex-1 py-3 neu-btn-primary font-bold" x-text="t('review')"></button></div>
+            </form>
+        </div>
+    </div>
+
+    <div x-show="modals.summary" class="fixed inset-0 neu-modal-overlay z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="neu-panel max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 relative bg-white">
+            <div class="text-center mb-6 border-b border-gray-200 pb-4"><h2 class="text-2xl font-bold text-gray-800" x-text="t('confirmBooking')"></h2></div>
+            <div class="space-y-6">
+                <div class="neu-pressed p-4 rounded-xl"><div class="text-xs text-gray-500 uppercase font-bold mb-2">Customer Details</div><div class="text-sm font-bold text-gray-800" x-text="form.companyName"></div><div class="text-sm text-gray-600">PIC: <span x-text="form.personInCharge"></span></div><div class="text-sm text-gray-600">Phone: <span x-text="form.phoneNumber"></span></div></div>
+                <div>
+                    <h3 class="font-bold text-gray-700 mb-2" x-text="t('selectedBooths')"></h3>
+                    <div class="space-y-2 mb-4"><template x-for="booth in selectedBooths" :key="booth"><div class="flex justify-between items-center text-sm px-2 border-b border-dashed border-gray-300 pb-1"><span>Booth <strong x-text="booth"></strong></span><span class="text-gray-600" x-text="'RM ' + getPrice(booth).toLocaleString()"></span></div></template></div>
+                    <div class="neu-pressed p-4 rounded-xl flex justify-between items-center mb-2"><span class="text-gray-600 font-bold" x-text="t('total')"></span><span class="font-bold text-lg text-emerald-600" x-text="'RM ' + totalPrice.toLocaleString()"></span></div>
+                </div>
+                <div class="pt-4 flex flex-col gap-3">
+                    <button @click="handleBookingAction('absolut')" class="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-lg flex justify-center items-center font-bold"><i class="fab fa-whatsapp text-2xl mr-2"></i> <span x-text="t('send')"></span></button>
+                    <button @click="handleBookingAction('copy')" class="w-full py-3 neu-btn text-sm flex justify-center items-center font-bold text-gray-600"><i class="fas fa-copy mr-2"></i> <span x-text="t('copy')"></span></button>
+                    <button @click="modals.summary = false; modals.booking = true" class="w-full py-2 text-xs text-gray-400 hover:text-gray-600">Back to Edit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="modals.success" class="fixed inset-0 neu-modal-overlay z-[70] flex items-center justify-center p-4" x-cloak>
+        <div class="neu-panel max-w-md w-full p-8 relative animate-fade-in-up bg-white text-center">
+            <div class="mb-4"><div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-500 text-3xl shadow-md"><i class="fas fa-check"></i></div></div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Booking Generated!</h3>
+            <p class="text-sm text-gray-600 leading-relaxed mb-6">Kindly send booking summary to our sales representative.</p>
+            <button @click="modals.success = false" class="px-8 py-3 neu-btn-primary font-bold shadow-lg w-full">Okay, Got it!</button>
+        </div>
+    </div>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-Qo679Xk4fnmJPxhlHKSnlRwTPYFv24YZx9lOKmpGV-vGCAdM6ECZDxRNf0d2xZ5x/exec';
@@ -201,10 +1085,30 @@
                         indoor: "Dewan",
                         outdoor: "Kanopi",
                         searchPlaceholder: "Cari Booth (cth: A1)",
-                        maintenanceTitle: "Sistem Sedang Dikemaskini",
-                        maintenanceDesc: "Pelan lantai kami sedang diselenggara. Sila lawati kami sebentar lagi.",
+                        showLegend: "Tunjuk Petunjuk",
+                        hideLegend: "Tutup Petunjuk",
+                        syncing: "Sedang Sync...",
+                        selected: "Dipilih",
+                        total: "Jumlah (Bayaran Penuh)",
+                        proceed: "Teruskan",
+                        bookingForm: "Borang Tempahan",
+                        companyName: "Nama Syarikat",
+                        brandName: "Nama Jenama",
+                        pic: "Wakil syarikat (PIC)",
+                        phone: "No. Telefon",
+                        email: "Emel",
+                        sellingItems: "Produk Jualan",
+                        billingAddr: "Alamat Bil",
+                        cancel: "Batal",
+                        review: "Semak Ringkasan",
+                        confirmBooking: "Sahkan Tempahan",
+                        selectedBooths: "Booth Dipilih",
+                        send: "Hantar ke Absolut (+60)",
+                        copy: "Salin Ringkasan",
+                        partners: "Rakan Rasmi",
                         contact: "Hubungi",
-                        help: "BANTUAN"
+                        help: "BANTUAN",
+                        comingSoon: "AKAN<br>DATANG"
                     },
                     en: {
                         welcomeTitle: "Welcome to",
@@ -217,33 +1121,371 @@
                         indoor: "Indoor Hall",
                         outdoor: "Outdoor",
                         searchPlaceholder: "Search Booth (e.g. A1)",
-                        maintenanceTitle: "System Maintenance",
-                        maintenanceDesc: "The floor plan is currently undergoing upgrades. Please check back later.",
+                        showLegend: "Show Legend",
+                        hideLegend: "Hide Legend",
+                        syncing: "Syncing...",
+                        selected: "Selected",
+                        total: "Total (Full Payment)",
+                        proceed: "Proceed",
+                        bookingForm: "Booking Form",
+                        companyName: "Company Name",
+                        brandName: "Brand Name",
+                        pic: "Person in Charge (PIC)",
+                        phone: "Phone (WhatsApp)",
+                        email: "Email Address",
+                        sellingItems: "Selling Items",
+                        billingAddr: "Billing Address",
+                        cancel: "Cancel",
+                        review: "Review Summary",
+                        confirmBooking: "Confirm Booking",
+                        selectedBooths: "Selected Booths",
+                        send: "Send to Absolut (+60)",
+                        copy: "Copy Summary",
+                        partners: "Official Partners",
                         contact: "Contact",
-                        help: "HELP"
+                        help: "HELP",
+                        comingSoon: "COMING<br>SOON"
                     }
                 },
-                currentZone: 'indoor', 
-                selectedBooths: [], 
-                modals: { welcome: true },
+                currentZone: 'indoor', loading: true, boothData: {}, selectedBooths: [], 
+                showLegend: true, 
+                filterAvailable: false,
+                dataCache: { indoor: null, outdoor: null },
+                modals: { welcome: true, booking: false, summary: false, success: false },
+                tooltip: { visible: false, x: 0, y: 0, content: '', id: '' },
                 notification: { visible: false, title: '', message: '', icon: '' },
                 searchQuery: '',
+                form: { companyName: '', brandName: '', personInCharge: '', phoneNumber: '', email: '', socialMedia: '', sellingItems: '', billingAddress: '' },
+                zoomLevel: 1, panX: 0, panY: 0, isDragging: false, startX: 0, startY: 0,
+                // Variables for Pinch Zoom
+                touchStartDist: 0, lastZoom: 1, startClickX: 0, startClickY: 0,
 
                 t(key) { return this.translations[this.lang][key] || key; },
 
-                initSystem() { 
-                    // No need to fetch data actively since map is under maintenance
-                    console.log("System initialized in maintenance mode.");
+                async initSystem() { 
+                    this.fetchBooths();
+                    setTimeout(() => this.fetchBooths(true, 'outdoor'), 500);
+                    if (window.innerWidth < 768) { this.zoomLevel = 1.3; this.panX = -100; this.panY = -50; }
+                    this.updateTransform();
+                    setInterval(() => this.backgroundSync(), 15000);
                 },
                 
                 switchZone(zone) { 
                     this.currentZone = zone;
+                    this.selectedBooths = []; 
+                    if (zone === 'outdoor') {
+                        if (window.innerWidth < 768) {
+                            this.zoomLevel = 2.2; this.panX = -450; this.panY = -250;
+                        } else { this.resetZoom(); }
+                    } else {
+                        if (window.innerWidth < 768) {
+                            this.zoomLevel = 1.3; this.panX = -100; this.panY = -50;
+                        } else { this.resetZoom(); }
+                    }
+                    this.updateTransform();
+                    if (this.dataCache[zone]) {
+                        this.boothData = this.dataCache[zone];
+                        this.loading = false;
+                        setTimeout(() => this.refreshVisuals(), 50); this.fetchBooths(true);
+                    } else { this.boothData = {}; this.loading = true; this.fetchBooths(); }
+                },
+                
+                toggleFilter() {
+                    this.filterAvailable = !this.filterAvailable;
+                    this.refreshVisuals();
+                },
+                
+                async fetchBooths(isBackground = false, specificZone = null) {
+                    try {
+                        const targetZone = specificZone || this.currentZone;
+                        const sheetName = targetZone === 'indoor' ? 'indoorhall' : 'newoutdoor';
+                        const res = await fetch(`${SCRIPT_URL}?action=getBooths&zone=${sheetName}`);
+                        const json = await res.json();
+                        if(json && !json.error) {
+                            this.dataCache[targetZone] = json;
+                            if (!specificZone || specificZone === this.currentZone) { this.boothData = json; }
+                        }
+                        if(!isBackground && (!specificZone || specificZone === this.currentZone)) {
+                            this.loading = false;
+                            this.refreshVisuals();
+                        }
+                    } catch(e) { console.error("Fetch Error:", e); }
                 },
 
-                showNotif(title, msg, icon) { 
-                    this.notification = { visible: true, title, message: msg, icon }; 
-                    setTimeout(() => this.notification.visible = false, 3000); 
-                }
+                async backgroundSync() { await this.fetchBooths(true, 'indoor'); await this.fetchBooths(true, 'outdoor'); },
+
+                getBoothInfo(id) {
+                    if (this.boothData[id]) return this.boothData[id];
+                    const numeric = parseInt(id);
+                    if (!isNaN(numeric)) {
+                        const strId = numeric.toString();
+                        if (this.boothData[strId]) return this.boothData[strId];
+                    }
+                    const match = id.match(/^([a-zA-Z]+)(\d)$/);
+                    if (match) {
+                        const zeroId = match[1] + '0' + match[2];
+                        if (this.boothData[zeroId]) return this.boothData[zeroId];
+                    }
+                    return null;
+                },
+
+                refreshVisuals() {
+                    const container = this.$refs.floorplanContainer;
+                    container.querySelectorAll('.booth').forEach(el => {
+                        const id = el.id;
+                        // REMOVE ONCLICK to prevent double fire
+                        el.onclick = null; 
+                        
+                        el.onmouseenter = (e) => this.showTooltip(e, id); el.onmouseleave = () => this.hideTooltip();
+                        
+                        el.classList.remove('status-sold', 'status-available', 'selected', 'dimmed', 'price-4000', 'price-4500', 'price-2500', 'price-3000');
+                        
+                        if (this.selectedBooths.includes(id)) { el.classList.add('selected'); return; }
+                        
+                        const info = this.getBoothInfo(id); 
+                        if (!info) return; 
+
+                        const status = info.status ? info.status.toUpperCase() : 'AVAILABLE';
+                        const price = this.getPrice(id);
+                        
+                        if (status.includes('SOLD') || status.includes('BOOK') || status.includes('FULLY PAID') || status.includes('PRE-BOOK')) { 
+                            if (this.filterAvailable) {
+                                el.classList.add('dimmed');
+                            } else {
+                                el.classList.add('status-sold');
+                            }
+                        } else {
+                            el.classList.add('status-available');
+                            if (price == 4000) el.classList.add('price-4000'); 
+                            else if (price == 4500) el.classList.add('price-4500'); 
+                            else if (price == 2500) el.classList.add('price-2500'); 
+                            else if (price == 3000) el.classList.add('price-3000'); 
+                        }
+                    });
+                },
+
+                toggleSelection(id) { this.handleBoothClick(id); },
+                
+                handleBoothClick(id) {
+                    const info = this.getBoothInfo(id);
+                    const status = info ? (info.status || 'AVAILABLE').toUpperCase() : 'AVAILABLE';
+                    if (status.includes('SOLD') || status.includes('BOOK') || status.includes('FULLY PAID') || status.includes('PRE-BOOK')) { 
+                        this.showNotif('Taken', `Booth ${id} is unavailable`, 'fas fa-lock');
+                        return; 
+                    }
+                    if (this.selectedBooths.includes(id)) { 
+                        this.selectedBooths = this.selectedBooths.filter(b => b !== id);
+                    } else { 
+                        if (this.selectedBooths.length >= 2) return this.showNotif('Limit', 'Max 2 booths', 'fas fa-exclamation');
+                        this.selectedBooths.push(id); 
+                    }
+                    this.refreshVisuals();
+                },
+
+                showTooltip(e, id) {
+                    const info = this.getBoothInfo(id) || {};
+                    const price = this.getPrice(id);
+                    const displayId = info.id || id;
+                    const category = info.category && info.category !== '-' ? info.category : (price >= 3000 ? 'F&B' : 'Retail');
+                    const status = info.status || 'AVAILABLE';
+                    
+                    // NEW: Size Check Logic
+                    let sizeHtml = '';
+                    if (this.currentZone === 'indoor') {
+                        const numId = parseInt(id);
+                        if (!isNaN(numId) && numId >= 1 && numId <= 190) {
+                            sizeHtml = '<div class="text-xs text-gray-300 mt-1 border-t border-gray-600 pt-1">Size: 3m x 3m</div>';
+                        }
+                    }
+
+                    this.tooltip.id = id;
+                    this.tooltip.content = `<div class="font-bold text-emerald-300">Booth ${displayId}</div><div class="text-[10px] text-gray-300 mb-1 border-b border-gray-600 pb-1">${category}</div><div class="text-xs text-gray-200">Price: RM ${price > 0 ? price.toLocaleString() : '-'}</div><div class="text-[10px] font-bold mt-1 uppercase ${status==='AVAILABLE'?'text-green-400':'text-red-400'}">${status}</div>${sizeHtml}`;
+                    this.tooltip.x = e.clientX; this.tooltip.y = e.clientY - 10; this.tooltip.visible = true;
+                },
+                
+                hideTooltip() { this.tooltip.visible = false; },
+                
+                getPrice(id) { 
+                    const info = this.getBoothInfo(id);
+                    if (info) { 
+                        const clean = (val) => {
+                            if (!val) return 0;
+                            const num = parseFloat(String(val).replace(/[^\d.-]/g, ''));
+                            return isNaN(num) ? 0 : num;
+                        };
+                        if (info.price) return clean(info.price);
+                        if (info.g) return clean(info.g); 
+                        if (info.h) return clean(info.h); 
+                    } 
+                    return 0;
+                },
+                
+                get totalPrice() { return this.selectedBooths.reduce((t, id) => t + this.getPrice(id), 0); },
+                showNotif(title, msg, icon) { this.notification = { visible: true, title, message: msg, icon }; setTimeout(() => this.notification.visible = false, 3000); },
+                
+                searchBooth() {
+                    let q = this.searchQuery.trim().toUpperCase();
+                    if (!q) return; 
+                    const findAndSwitch = (id) => {
+                        const el = document.getElementById(id);
+                        if(el) {
+                            const parentSvg = el.closest('svg');
+                            if(parentSvg) {
+                                const zone = parentSvg.id.replace('-svg', '');
+                                if(zone !== this.currentZone) { this.switchZone(zone); }
+                                setTimeout(() => {
+                                    const freshEl = document.getElementById(id);
+                                    if(freshEl) {
+                                        freshEl.parentNode.appendChild(freshEl);
+                                        freshEl.classList.add('searched');
+                                        setTimeout(() => freshEl.classList.remove('searched'), 3000);
+                                    }
+                                }, 150);
+                                return true;
+                            }
+                        }
+                        return false;
+                    };
+                    if (findAndSwitch(q)) return;
+                    if (q.match(/\d+/)) {
+                        if (q.length === 1 && !isNaN(q)) { if (findAndSwitch("0" + q)) return; }
+                        if (q.match(/[A-Z]\d+/)) {
+                            let match = q.match(/([A-Z])(\d+)/);
+                            if (match && match[2].length === 1) { if (findAndSwitch(match[1] + '0' + match[2])) return; }
+                        }
+                    }
+                    if (q.match(/0\d+/)) { if (findAndSwitch(q.replace('0', ''))) return; }
+                    this.showNotif('Not Found', 'Booth not found', 'fas fa-search');
+                },
+                
+                generateSummary() { this.modals.booking = false; this.modals.summary = true; },
+                
+                handleBookingAction(type) {
+                    const refId = 'PEN' + Math.floor(100000 + Math.random() * 900000);
+                    const payload = { ...this.form, selectedBooths: this.selectedBooths, totalPrice: this.totalPrice, bookingId: refId };
+                    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+                    let msg = `*ABSOLUT BAZAAR PENANG 2026*\n`;
+                    msg += `PICCA, PENANG\n`;
+                    msg += `6-8 MARCH 2026\n\n`;
+                    msg += `Booking ID: ${refId}\n`;
+                    msg += `Company: ${this.form.companyName}\n`;
+                    msg += `Brand: ${this.form.brandName}\n`;
+                    msg += `Wakil syarikat (PIC): ${this.form.personInCharge}\n`;
+                    msg += `Phone: ${this.form.phoneNumber}\n`;
+                    msg += `Email: ${this.form.email}\n`;
+                    msg += `Billing Address: ${this.form.billingAddress}\n\n`;
+                    msg += `Selected Booths: ${this.selectedBooths.join(', ')}\n`;
+                    msg += `Total Amount: RM ${this.totalPrice.toLocaleString()}\n\n`; 
+                    msg += `Items to Sell: ${this.form.sellingItems}\n\n`;
+                    msg += `Please confirm this booking and for us to provide payment instructions\n\n`;
+                    msg += `Please use this remark: ABPG${this.selectedBooths.join('')}\n\n`;
+                    msg += `Thank you!`;
+
+                    if (type === 'absolut') { window.open(`https://wa.me/60176831247?text=${encodeURIComponent(msg)}`, '_blank'); } 
+                    else if (type === 'copy') { navigator.clipboard.writeText(msg).then(() => { this.showNotif('Copied', 'Booking summary copied to clipboard', 'fas fa-copy'); }); }
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                    this.modals.summary = false; this.modals.success = true; this.selectedBooths = []; this.refreshVisuals();
+                },
+
+                // NEW: MOUSE CLICK HANDLER (Separated from Touch)
+                handleMapClick(e) {
+                    // Only process click if not dragging
+                    if (!this.isDragging) {
+                        const booth = e.target.closest('.booth');
+                        if (booth) {
+                            this.handleBoothClick(booth.id);
+                        }
+                    }
+                },
+
+                // TOUCH LOGIC FIX
+                handleTouchStart(e) {
+                    if (e.touches.length === 1) {
+                        // Start Drag/Pan or Tap
+                        this.isDragging = false; // Assume tap initially
+                        this.startClickX = e.touches[0].clientX;
+                        this.startClickY = e.touches[0].clientY;
+                        this.startX = e.touches[0].clientX - this.panX;
+                        this.startY = e.touches[0].clientY - this.panY;
+                    } else if (e.touches.length === 2) {
+                        e.preventDefault();
+                        this.isDragging = false; 
+                        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                        this.touchStartDist = dist;
+                        this.lastZoom = this.zoomLevel;
+                    }
+                },
+
+                handleTouchMove(e) {
+                    e.preventDefault();
+                    if (e.touches.length === 1) {
+                        const x = e.touches[0].clientX;
+                        const y = e.touches[0].clientY;
+                        
+                        // Check if moved significantly to consider as drag
+                        if (Math.abs(x - this.startClickX) > 5 || Math.abs(y - this.startClickY) > 5) {
+                            this.isDragging = true;
+                            this.panX = x - this.startX;
+                            this.panY = y - this.startY;
+                            this.updateTransform();
+                        }
+                    } else if (e.touches.length === 2) {
+                        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                        if (this.touchStartDist > 0) {
+                            const delta = dist / this.touchStartDist;
+                            const newZoom = this.lastZoom * delta;
+                            if (newZoom > 0.5 && newZoom < 5) {
+                                this.zoomLevel = newZoom;
+                                this.updateTransform();
+                            }
+                        }
+                    }
+                },
+
+                handleTouchEnd(e) {
+                    if (e.touches.length === 0) { // All fingers lifted
+                        if (!this.isDragging) {
+                            // It was a TAP!
+                            const touch = e.changedTouches[0];
+                            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                            const booth = target ? target.closest('.booth') : null;
+                            
+                            if (booth) {
+                                e.preventDefault(); // STOP GHOST CLICKS
+                                this.handleBoothClick(booth.id);
+                            }
+                        }
+                        this.isDragging = false;
+                        this.touchStartDist = 0;
+                    }
+                },
+                
+                startDrag(e) { 
+                    if(e.type === 'touchstart') return; // Handled above
+                    if(e.target.closest('.booth')) return;
+                    e.preventDefault();
+                    
+                    this.isDragging=true; 
+                    this.startX=e.clientX-this.panX; 
+                    this.startY=e.clientY-this.panY; 
+                    
+                    const move = (ev) => { 
+                        ev.preventDefault(); 
+                        this.panX=ev.clientX-this.startX; 
+                        this.panY=ev.clientY-this.startY; 
+                        this.updateTransform(); 
+                    };
+                    const end = () => { 
+                        // Small delay to prevent drag release triggering click
+                        setTimeout(() => { this.isDragging=false; }, 50);
+                        window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', end); 
+                    }; 
+                    window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+                },
+                zoomIn(){ this.zoomLevel=Math.min(this.zoomLevel*1.2, 4); this.updateTransform(); }, 
+                zoomOut(){ this.zoomLevel=Math.max(this.zoomLevel/1.2, 0.5); this.updateTransform(); }, 
+                resetZoom(){ this.zoomLevel=1; this.panX=0; this.panY=0; this.updateTransform(); },
+                updateTransform(){ if(this.$refs.floorplanContainer) this.$refs.floorplanContainer.style.transform=`translate(${this.panX}px, ${this.panY}px) scale(${this.zoomLevel})`; }
             }));
         });
     </script>
